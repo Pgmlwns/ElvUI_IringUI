@@ -10,7 +10,7 @@ F.Styling = function(f, useStripes, useShadow)
 
 	-- 배경색을 더 진하고 묵직하게 고정
 	if f.SetBackdropColor then
-		f:SetBackdropColor(0.05, 0.05, 0.05, 0.9) -- 아주 어두운 검정 (90% 불투명)
+		f:SetBackdropColor(0.05, 0.05, 0.05, 0.7) -- 아주 어두운 검정 (70% 불투명)
 	end
 
 	local style = CreateFrame("Frame", nil, f, "BackdropTemplate")
