@@ -6,6 +6,7 @@
 
 Init.lua
 Config\Core.lua
+Modules\Misc\GameMenu.lua
 Options.lua
 Styling.lua
 Modules\Misc\GameMenu.lua
