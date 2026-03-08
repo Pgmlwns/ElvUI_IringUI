@@ -14,22 +14,19 @@ P["IringUI"] = {
 		["shadow"] = true,
 	},
 	["layout"] = {
-		["topBar"] = false,
-		["bottomBar"] = false,
-	},
-	["autobar"] = {
-		["enable"] = false,
+		["topBar"] = true, -- 상단 바 기본 활성화
+		["topBarHeight"] = 22,
 	},
 }
 
 -- 보따리 구성 및 전역 등록
-Engine[1] = IR
-Engine[2] = F
-Engine[3] = E
-Engine[4] = L
-Engine[5] = V.IringUI
-Engine[6] = P.IringUI
-Engine[7] = G.IringUI
+Engine = IR
+Engine = F
+Engine = E
+Engine = L
+Engine = V.IringUI
+Engine = P.IringUI
+Engine = G.IringUI
 
 _G[addon] = Engine
 IR.Title = "|cffff69b4Iring|r|cffb2b2b2UI|r"
@@ -46,7 +43,7 @@ function IR:Initialize()
 	local EP = E.Libs.EP
 	EP:RegisterPlugin(addon, self.OptionsCallback)
 
-	print(self.Title .. " 로드 완료!")
+	print(self.Title .. " 로드 완료! 판다리아 클래식을 환영합니다.")
 end
 
 E:RegisterModule(IR:GetName())
