@@ -40,21 +40,37 @@ local function Styling(f, useStripes, useShadow)
     f.__style = 1
 end
 
--- [수정] 테두리 하이라이트 함수 (투명도 1로 고정하여 선명하게)
+-- [강화] 테두리 하이라이트 함수 (강제 색상 고정 및 선명도 강화)
 local function StyleButton(f)
     if not f or f.IringBtnStyled then return end
     
+    -- 마우스 진입 시
     f:HookScript("OnEnter", function(self)
         local color = RAID_CLASS_COLORS[E.myclass]
         local target = self.backdrop or self
-        if target.SetBackdropBorderColor then
+        
+        if target and target.SetBackdropBorderColor then
+            -- 1. 테두리 색상 강제 적용 (투명도 1)
             target:SetBackdropBorderColor(color.r, color.g, color.b, 1)
+            
+            -- 2. 엘브가 색상을 다시 바꾸지 못하게 강제 고정 (선택 사항)
+            if not target.IringForced then
+                hooksecurefunc(target, "SetBackdropBorderColor", function(s, r, g, b, a)
+                    if s.isHovered and (r ~= color.r or g ~= color.g or b ~= color.b) then
+                        s:SetBackdropBorderColor(color.r, color.g, color.b, 1)
+                    end
+                end)
+                target.IringForced = true
+            end
         end
+        self.isHovered = true
     end)
     
+    -- 마우스 나갈 때
     f:HookScript("OnLeave", function(self)
+        self.isHovered = false
         local target = self.backdrop or self
-        if target.SetBackdropBorderColor then
+        if target and target.SetBackdropBorderColor then
             target:SetBackdropBorderColor(unpack(E.media.bordercolor))
         end
     end)
