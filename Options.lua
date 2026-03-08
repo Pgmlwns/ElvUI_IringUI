@@ -1,38 +1,36 @@
 local IR, F, E, L, V, P, G = unpack(select(2, ...))
+local PI = E:GetModule('PluginInstaller')
 
-function IR:OptionsCallback()
-    E.Options.args.IringUI = {
-        type = "group",
-        name = IR.Title,
-        childGroups = "tab",
-        args = {
-            general = { order = 1, type = "group", name = "일반", args = { header = { order = 1, type = "header", name = "일반 설정" }}},
-            style = {
-                order = 2,
-                type = "group",
-                name = "스타일",
-                get = function(info) return E.db.IringUI.skin[info[#info]] end,
-                set = function(info, value) E.db.IringUI.skin[info[#info]] = value; E:StaticPopup_Show("CONFIG_RL") end,
-                args = {
-                    header = { order = 1, type = "header", name = "스타일 설정" },
-                    enable = { order = 2, type = "toggle", name = "스킨 활성화" },
-                    stripes = { order = 3, type = "toggle", name = "사선 패턴" },
-                    shadow = { order = 4, type = "toggle", name = "그림자 효과" },
-                },
-            },
-            layout = { 
-                order = 3, 
-                type = "group", 
-                name = "레이아웃", 
-                get = function(info) return E.db.IringUI.layout[info[#info]] end,
-                set = function(info, value) E.db.IringUI.layout[info[#info]] = value; IR:UpdateLayout() end,
-                args = { 
-                    header = { order = 1, type = "header", name = "레이아웃 설정" },
-                    topBar = { order = 2, type = "toggle", name = "상단 바 표시" },
-                    bottomBar = { order = 3, type = "toggle", name = "하단 바 표시" },
-                }
-            },
-            autobar = { order = 4, type = "group", name = "자동바", args = { header = { order = 1, type = "header", name = "AutoBar 설정" }}},
-        },
-    }
+-- ElvUI 기본 설치창 가로채기 함수
+function IR:InterceptInstaller()
+	if _G.ElvUIInstallFrame then _G.ElvUIInstallFrame:Hide() end
+	E.Install = function() PI:Queue(self.installTable); E:ToggleOptionsUI() end
+
+	if not E.db.IringUI.install_complete then
+		E.private.install_complete = E.version
+		PI:Queue(self.installTable)
+	end
 end
+
+-- 설치 가이드 테이블
+IR.installTable = {
+	Title = IR.Title .. " 설치",
+	Name = "IringUI",
+	Pages = {
+		= function()
+			_G.ElvUIInstallFrame.SubTitle:SetText("환영합니다")
+			_G.ElvUIInstallFrame.Desc1:SetText("IringUI 레이아웃 설치를 시작합니다.")
+			_G.ElvUIInstallFrame.Option1:SetText("다음")
+			_G.ElvUIInstallFrame.Option1:SetScript("OnClick", function() _G.ElvUIInstallFrame:NextPage() end)
+		end,
+		= function()
+			_G.ElvUIInstallFrame.SubTitle:SetText("완료")
+			_G.ElvUIInstallFrame.Desc1:SetText("설치가 완료되었습니다.")
+			_G.ElvUIInstallFrame.Option1:SetText("마치기")
+			_G.ElvUIInstallFrame.Option1:SetScript("OnClick", function()
+				E.db.IringUI.install_complete = E.version
+				_G.ReloadUI()
+			end)
+		end,
+	},
+}
