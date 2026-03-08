@@ -56,7 +56,8 @@
         "YES",
         "NO",
         "TRIVIAL_QUEST_DISPLAY",
-        "TooltipDataProcessor"
+        "TooltipDataProcessor",
+        "GameMenuFrame"
     ],
     "Lua.type.weakUnionCheck": true
 }
