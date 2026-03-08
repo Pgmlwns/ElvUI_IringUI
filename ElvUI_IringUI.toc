@@ -1,18 +1,16 @@
 ## Interface: 50400
-## Title: |cff1784d1ElvUI|r |cffff69b4Iring|r|cffb2b2b2UI|r
-## Notes: Professional Layout Plugin for MoP Classic
-## RequiredDeps: ElvUI
+## Title: |cff1784d1ElvUI|r |cff00c0faIringUI|r
 ## Author: Iring
-## Version: 1.0.0
-## SavedVariables: IringDB
-## SavedVariablesPerCharacter: IringCharacterDB
+## Version: 1.0
+## RequiredDeps: ElvUI
 
-Init.lua
-Media.lua
-Styling.lua
-Layout.lua
-Options.lua
-Install.lua
+Init.lua             # 1. 애드온 초기화 및 전역 변수(IR) 생성
+Config\Core.lua      # 2. 데이터베이스(P) 기본값 설정 (가장 중요)
+Media.lua            # 3. 텍스처 및 미디어 경로 등록
+Options.lua          # 4. 설정창 메인 뼈대 (IR:OptionsCallback)
 
-Config\GameMenu.lua
-Modules\Misc\GameMenu.lua
+Styling.lua          # 5. 공유 함수 (IR.Styling, IR.StyleButton)
+Layout.lua           # 6. 레이아웃 관련
+Install.lua          # 7. 설치 창 관련
+
+Modules\Misc\GameMenu.lua  # 8. 게임 메뉴 기능 + 설정 주입
