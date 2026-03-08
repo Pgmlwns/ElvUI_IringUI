@@ -27,15 +27,17 @@ local function Styling(f, useStripes, useShadow)
 		style.stripes = stripes
 	end
 
-	-- 그림자 (Shadow) - 직업 색상 적용
+	-- 그림자 (Shadow) - 인스톨 파일과 동일한 설정값 적용
 	if E.db.IringUI.skin.shadow and not useShadow then
 		local mshadow = f:CreateTexture(nil, "BORDER")
 		mshadow:SetInside(f, 0, 0)
 		mshadow:SetTexture(IR.Media.Overlay)
 		
+		-- 인스톨 파일에서 성공한 직업 색상 및 투명도(0.4)
 		local color = RAID_CLASS_COLORS[E.myclass]
 		mshadow:SetVertexColor(color.r, color.g, color.b)
-		mshadow:SetAlpha(0.6)
+		mshadow:SetAlpha(0.4) 
+		
 		style.mshadow = mshadow
 	end
 
