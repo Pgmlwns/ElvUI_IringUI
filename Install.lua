@@ -15,30 +15,27 @@ local function ForceIringStyle()
 	local target = f.backdrop or f
 	if target then
 		-- 1. 빗살무늬 (Stripes) 생성 및 유지
-		if not target.IringStripes then
-			local tex = target:CreateTexture(nil, "OVERLAY", nil, 6) -- 그림자보다 아래 레이어
-			tex:SetInside(target, 1, -1)
-			tex:SetTexture(IR.Media.Stripes, true, true)
-			tex:SetHorizTile(true)
-			tex:SetVertTile(true)
-			tex:SetBlendMode("ADD")
-			tex:SetAlpha(0.5)
-			target.IringStripes = tex
-		end
+-- [수정 버전] 아주 은은하게 직업 색상이 묻어나는 쉐도우 설정
+if not target.IringShadow then
+    local sha = target:CreateTexture(nil, "OVERLAY", nil, 7)
+    sha:SetInside(target, 0, 0)
+    sha:SetTexture(IR.Media.Overlay) -- 그림자 텍스처
+    
+    local color = RAID_CLASS_COLORS[E.myclass]
+    
+    -- [핵심 수정 1] 색상을 그대로 쓰지 않고, 약간 어둡고 차분하게 조절 (r, g, b)
+    -- 각각 0.7을 곱해서 색상의 채도를 살짝 낮춥니다.
+    sha:SetVertexColor(color.r * 0.7, color.g * 0.7, color.b * 0.7) 
+    
+    -- [핵심 수정 2] 블렌드 모드를 사용하지 않음 (발광 효과 제거)
+    sha:SetBlendMode("BLEND") 
+    
+    -- [핵심 수정 3] 투명도를 0.4 정도로 낮추어 아주 은은하게 배경에 스며들게 함
+    sha:SetAlpha(0.4) 
+    
+    target.IringShadow = sha
+end
 
-		-- 2. [추가] 그림자 (Shadow) 생성 - 서브창과 느낌 맞추기
-		if not target.IringShadow then
-			local sha = target:CreateTexture(nil, "OVERLAY", nil, 7) -- 빗살무늬보다 위 레이어
-			sha:SetInside(target, 0, 0)
-			sha:SetTexture(IR.Media.Overlay) -- Styling.lua에서 사용하는 그림자 텍스처
-			
-			-- 직업 색상 적용 (Styling.lua 로직과 통일)
-			local color = RAID_CLASS_COLORS[E.myclass]
-			sha:SetVertexColor(color.r, color.g, color.b)
-			sha:SetAlpha(0.6) -- 서브창과 동일한 농도
-			
-			target.IringShadow = sha
-		end
 	end
 
 	-- 제목 줄(Title)에도 동일하게 그림자 적용
