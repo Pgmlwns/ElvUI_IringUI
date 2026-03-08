@@ -2,62 +2,90 @@ local IR, F, E, L, V, P, G = unpack(select(2, ...))
 
 IR.Styling = {}
 
-local function Styling(f, useStripes, useShadow)
+-- [핵심] 스타일링 적용 함수
+F.Styling = function(f, useStripes, useShadow)
+	-- 설정값 체크
 	if not E.db or not E.db.IringUI or not E.db.IringUI.skin.enable then return end
 	if not f or f.IRstyle or f.__style then return end
 
-	if f:GetObjectType() == "Texture" then f = f:GetParent() end
+	-- 배경색 고정 (묵직한 다크 모드)
+	if f.SetBackdropColor then
+		f:SetBackdropColor(0.06, 0.06, 0.06, 0.85) 
+	end
 
-	local frameName = f.GetName and f:GetName()
-	local style = CreateFrame("Frame", frameName and frameName.."_IRStyle" or nil, f, "BackdropTemplate")
+	local style = CreateFrame("Frame", nil, f, "BackdropTemplate")
+	style:SetAllPoints(f)
+	style:SetFrameLevel(f:GetFrameLevel() + 1)
 
-	-- 빗살무늬 (Stripes)
+	-- 1. 빗살무늬 (Stripes)
 	if E.db.IringUI.skin.stripes and not useStripes then
-		local stripes = f:CreateTexture(nil, "BORDER")
-		stripes:SetInside(f, 1, -1)
+		local stripes = style:CreateTexture(nil, "OVERLAY", nil, 6)
+		stripes:SetInside(style, 1, -1)
 		stripes:SetTexture(IR.Media.Stripes, true, true)
 		stripes:SetHorizTile(true)
 		stripes:SetVertTile(true)
 		stripes:SetBlendMode("ADD")
-		
-		-- 설치창 레이어 격상 (메라실리스 방식)
-		if frameName and (frameName:find("PluginInstall") or frameName:find("ElvUIInstall")) then
-			stripes:SetDrawLayer("OVERLAY", 7)
-		end
+		stripes:SetAlpha(0.5) 
 		style.stripes = stripes
 	end
 
-	-- 그림자 (Shadow) - 직업 색상 적용
+	-- 2. 그림자 효과 (Shadow) - [수정] 은은한 직업 색상 적용
 	if E.db.IringUI.skin.shadow and not useShadow then
-		local mshadow = f:CreateTexture(nil, "BORDER")
-		mshadow:SetInside(f, 0, 0)
+		local mshadow = style:CreateTexture(nil, "OVERLAY", nil, 7)
+		mshadow:SetInside(style, 0, 0)
 		mshadow:SetTexture(IR.Media.Overlay)
 		
+		-- 캐릭터 직업 색상 가져오기
 		local color = RAID_CLASS_COLORS[E.myclass]
-		mshadow:SetVertexColor(color.r, color.g, color.b)
-		mshadow:SetAlpha(0.6)
+		
+		-- [핵심] 톤 다운된 직업 색상 (색상에 0.7을 곱해 차분하게 만듦)
+		mshadow:SetVertexColor(color.r * 0.7, color.g * 0.7, color.b * 0.7) 
+		
+		-- [핵심] 발광 효과 제거 및 아주 연한 투명도(0.4) 적용
+		mshadow:SetBlendMode("BLEND") 
+		mshadow:SetAlpha(0.4) 
+
 		style.mshadow = mshadow
 	end
-
-	style:SetFrameStrata(f:GetFrameStrata())
-	style:SetFrameLevel(f:GetFrameLevel() + 1)
-	style:SetAllPoints(f)
 	
 	f.IRstyle = style
 	f.__style = 1
 end
 
+-- [낚시질] 모든 프레임 설계도에 Styling 기능 심기
 local function AddIringAPI()
 	local frame = CreateFrame("Frame")
 	local mt = getmetatable(frame).__index
-	if not mt.Styling then mt.Styling = Styling end
-
-	-- 메라실리스 핵심: SetTemplate 후킹
+	if not mt.Styling then mt.Styling = F.Styling end
 	if mt.SetTemplate then
 		hooksecurefunc(mt, "SetTemplate", function(f)
+			if f and f.Styling then f:Styling() end
+		end)
+	end
+	if mt.CreateBackdrop then
+		hooksecurefunc(mt, "CreateBackdrop", function(f)
 			if f and f.Styling then f:Styling() end
 		end)
 	end
 end
 
 AddIringAPI()
+
+-- 소급 적용
+local function ApplyToExisting()
+	local panels = {
+		_G["LeftChatPanel"], _G["RightChatPanel"], _G["MinimapPanel"], 
+		_G["ElvUI_Bar1"], _G["ElvUI_Bar2"], _G["ElvUI_Bar3"], 
+		_G["ElvUI_Bar4"], _G["ElvUI_Bar5"], _G["ElvUI_Bar6"]
+	}
+	for _, frame in pairs(panels) do
+		if frame and frame.Styling then frame:Styling() end
+	end
+end
+
+local loader = CreateFrame("Frame")
+loader:RegisterEvent("PLAYER_ENTERING_WORLD")
+loader:SetScript("OnEvent", function(self)
+	ApplyToExisting()
+	self:UnregisterAllEvents()
+end)
