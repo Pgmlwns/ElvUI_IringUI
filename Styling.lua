@@ -51,47 +51,25 @@ end
 
 -- [2] 버튼 전용 테두리 하이라이트 함수
 local function StyleButton(f)
-    if not f or f.IringBtnStyled then return end
+	if not f or f.IringBtnStyled then return end
 
-    -- 발광용 텍스처 생성 (없을 경우에만)
-    if not f.hoverGlow then
-        f.hoverGlow = f:CreateTexture(nil, "OVERLAY")
-        f.hoverGlow:SetTexture(E.Media.Textures.White8x8) -- 혹은 발광용 부드러운 텍스처
-        f.hoverGlow:SetInside(f.backdrop or f, -2, -2) -- 약간 바깥으로 삐져나오게
-        f.hoverGlow:SetAlpha(0)
-        f.hoverGlow:SetBlendMode("ADD")
-    end
+	f:HookScript("OnEnter", function(self)
+		local color = RAID_CLASS_COLORS[E.myclass]
+		local target = self.backdrop or self
+		if target.SetBackdropBorderColor then
+			target:SetBackdropBorderColor(color.r, color.g, color.b)
+		end
+	end)
 
-    f:HookScript("OnEnter", function(self)
-        local color = RAID_CLASS_COLORS[E.myclass]
-        local target = self.backdrop or self
-        
-        -- 테두리 색상 변경
-        if target.SetBackdropBorderColor then
-            target:SetBackdropBorderColor(color.r, color.g, color.b)
-        end
-        
-        -- 은은한 발광 효과 (투명도를 0.2~0.3 정도로 낮게 설정)
-        if self.hoverGlow then
-            self.hoverGlow:SetVertexColor(color.r, color.g, color.b, 0.2)
-            self.hoverGlow:SetAlpha(1)
-        end
-    end)
+	f:HookScript("OnLeave", function(self)
+		local target = self.backdrop or self
+		if target.SetBackdropBorderColor then
+			target:SetBackdropBorderColor(unpack(E.media.bordercolor))
+		end
+	end)
 
-    f:HookScript("OnLeave", function(self)
-        local target = self.backdrop or self
-        if target.SetBackdropBorderColor then
-            target:SetBackdropBorderColor(unpack(E.media.bordercolor))
-        end
-        
-        if self.hoverGlow then
-            self.hoverGlow:SetAlpha(0)
-        end
-    end)
-
-    f.IringBtnStyled = true
+	f.IringBtnStyled = true
 end
-
 
 -- [3] API 주입 및 엘브 후킹
 local function AddIringAPI()
