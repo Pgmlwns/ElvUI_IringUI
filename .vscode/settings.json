@@ -47,7 +47,15 @@
         "GUILD_EVENT_LOG",
         "PARTY",
         "GUILD",
-        "RAID"
+        "RAID",
+        "SlashCmdList",
+        "RETRIEVING_ITEM_INFO",
+        "ITEM_LEVEL",
+        "ENCHANTED_TOOLTIP_LINE",
+        "StaticPopupDialogs",
+        "YES",
+        "NO",
+        "TRIVIAL_QUEST_DISPLAY"
     ],
     "Lua.type.weakUnionCheck": true
 }
