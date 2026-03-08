@@ -1,53 +1,57 @@
 local IR, F, E, L, V, P, G = unpack(select(2, ...))
 local PI = E:GetModule('PluginInstaller')
 
--- 설치 완료 및 재시작 함수
+-- 설치 완료 함수
 local function InstallComplete()
 	E.db.IringUI.install_complete = E.version
-	if _G.PluginInstallStepComplete then
-		_G.PluginInstallStepComplete.message = IR.Title .. " 설치 완료!"
-		_G.PluginInstallStepComplete:Show()
-	end
 	_G.ReloadUI()
 end
 
--- [필독] 설치창 전용 스타일 강제 고정 함수
+-- [최종 해결] 설치창 배경에 빗살무늬 직접 강제 생성
 local function StyleInstallFrame()
 	local f = _G.PluginInstallFrame
-	if not f then return end
+	if not f or not f.backdrop then return end
 
-	-- 1. 메인 프레임 배경(backdrop)에 스타일 입히기
-	if f.backdrop then
-		if not f.backdrop.IRstyle then
-			f.backdrop:Styling()
-		end
+	-- 1. 메인 배경(backdrop)에 스타일이 입혀졌는지 확인
+	if not f.backdrop.IringStripes then
+		-- 이미 스타일링 엔진이 있다면 사용하고, 아니면 직접 생성
+		local stripes = f.backdrop:CreateTexture(nil, "OVERLAY")
+		stripes:SetInside(f.backdrop, 1, -1)
+		stripes:SetTexture(IR.Media.Stripes, true, true)
+		stripes:SetHorizTile(true)
+		stripes:SetVertTile(true)
+		stripes:SetBlendMode("ADD")
+		stripes:SetDrawLayer("OVERLAY", 7) -- 최상단 레이어로 강제 고정
 		
-		-- 배경색 때문에 무늬가 안 보일 수 있으므로 최상단 레이어로 강제 이동
-		if f.backdrop.IRstyle and f.backdrop.IRstyle.stripes then
-			f.backdrop.IRstyle.stripes:SetDrawLayer("OVERLAY", 7)
-		end
+		f.backdrop.IringStripes = stripes
 	end
 
-	-- 2. 제목 줄 배경도 스타일 적용
-	if _G.PluginInstallTitleFrame and not _G.PluginInstallTitleFrame.IRstyle then
-		_G.PluginInstallTitleFrame:Styling()
+	-- 2. 제목 프레임 배경도 강제 처리
+	local title = _G.PluginInstallTitleFrame
+	if title and title.backdrop and not title.backdrop.IringStripes then
+		local stripes = title.backdrop:CreateTexture(nil, "OVERLAY")
+		stripes:SetInside(title.backdrop, 1, -1)
+		stripes:SetTexture(IR.Media.Stripes, true, true)
+		stripes:SetHorizTile(true)
+		stripes:SetVertTile(true)
+		stripes:SetBlendMode("ADD")
+		stripes:SetDrawLayer("OVERLAY", 7)
+		
+		title.backdrop.IringStripes = stripes
 	end
 end
 
 -- ElvUI 기본 설치창 가로채기
 function IR:InterceptInstaller()
 	if _G.ElvUIInstallFrame then _G.ElvUIInstallFrame:Hide() end
-	
 	E.Install = function() 
 		PI:Queue(self.installTable)
 		E:ToggleOptionsUI() 
-		E:Delay(0.02, StyleInstallFrame)
 	end
 
 	if not E.db.IringUI.install_complete then
 		E.private.install_complete = E.version
 		PI:Queue(self.installTable)
-		E:Delay(0.05, StyleInstallFrame)
 	end
 end
 
@@ -102,7 +106,7 @@ IR.installTable = {
 	StepTitleTextJustification = "CENTER",
 }
 
--- [가장 중요한 부분] 페이지가 바뀔 때마다 스타일을 다시 입힘
+-- [결정타] 페이지가 바뀔 때마다 0.01초 뒤에 배경을 강제로 덮어씌움
 hooksecurefunc(PI, "SetPage", function()
 	E:Delay(0.01, StyleInstallFrame)
 end)
