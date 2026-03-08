@@ -55,7 +55,8 @@
         "StaticPopupDialogs",
         "YES",
         "NO",
-        "TRIVIAL_QUEST_DISPLAY"
+        "TRIVIAL_QUEST_DISPLAY",
+        "TooltipDataProcessor"
     ],
     "Lua.type.weakUnionCheck": true
 }
