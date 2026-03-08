@@ -1,58 +1,47 @@
 local IR, F, E, L, V, P, G = unpack(select(2, ...))
 local PI = E:GetModule('PluginInstaller')
 
--- 설치 완료 및 재시작 함수
+-- 설치 완료 함수
 local function InstallComplete()
 	E.db.IringUI.install_complete = E.version
-	if _G.PluginInstallStepComplete then
-		_G.PluginInstallStepComplete.message = IR.Title .. " 설치 완료!"
-		_G.PluginInstallStepComplete:Show()
-	end
 	_G.ReloadUI()
 end
 
--- [핵심] 설치창 전용 스타일 입히기 함수
+-- [완전 해결] 설치창 배경에 IringUI 스타일 강제 주입
 local function StyleInstallFrame()
 	local f = _G.PluginInstallFrame
 	if not f then return end
 
-	-- 1. 메인 프레임에 스타일 적용
-	if f.Styling and not f.IRstyle then
-		f:Styling()
+	-- 1. 메인 배경(Backdrop) 자체에 Styling 강제 적용
+	if f.backdrop then
+		-- 이미 적용되었다면 중복 실행 방지
+		if not f.backdrop.IRstyle then
+			f.backdrop:Styling()
+		end
+		
+		-- ElvUI가 배경을 단색으로 덮어쓰지 못하도록 사선 패턴을 최상단으로 올림
+		if f.backdrop.IRstyle and f.backdrop.IRstyle.stripes then
+			f.backdrop.IRstyle.stripes:SetDrawLayer("OVERLAY", 7)
+		end
 	end
 
-	-- 2. 메인 프레임의 배경(Backdrop)에 스타일 적용 (왼쪽 구역)
-	if f.backdrop and f.backdrop.Styling and not f.backdrop.IRstyle then
-		f.backdrop:Styling()
-	end
-
-	-- 3. 상단 장식 바 추가 (선택 사항 - 핑크색 포인트)
-	if not f.IringTopLine then
-		local line = f:CreateTexture(nil, "OVERLAY")
-		line:SetPoint("TOPLEFT", f, "TOPLEFT", 2, -2)
-		line:SetPoint("TOPRIGHT", f, "TOPRIGHT", -2, -2)
-		line:SetHeight(2)
-		line:SetColorTexture(1, 0.41, 0.7, 0.8) -- 핑크색
-		f.IringTopLine = line
+	-- 2. 버튼들이 있는 하단부 및 오른쪽 리스트 배경도 확인
+	if _G.PluginInstallTitleFrame and not _G.PluginInstallTitleFrame.IRstyle then
+		_G.PluginInstallTitleFrame:Styling()
 	end
 end
 
 -- ElvUI 기본 설치창 가로채기
 function IR:InterceptInstaller()
 	if _G.ElvUIInstallFrame then _G.ElvUIInstallFrame:Hide() end
-	
-	-- ElvUI의 설치 함수를 우리 것으로 교체
 	E.Install = function() 
 		PI:Queue(self.installTable)
 		E:ToggleOptionsUI() 
-		E:Delay(0.02, StyleInstallFrame) -- 열릴 때 스타일 적용
 	end
 
-	-- 미설치 시 자동 실행
 	if not E.db.IringUI.install_complete then
 		E.private.install_complete = E.version
 		PI:Queue(self.installTable)
-		E:Delay(0.05, StyleInstallFrame) -- 초기 로드 시 지연 적용
 	end
 end
 
@@ -68,17 +57,15 @@ IR.installTable = {
 			if not _G.PluginInstallFrame then return end
 			_G.PluginInstallFrame.SubTitle:SetFormattedText("환영합니다! |cffff69b4Iring|r|cffb2b2b2UI|r 버전 %s", "1.0.0")
 			_G.PluginInstallFrame.Desc1:SetText("이 가이드는 IringUI의 핵심 스타일과 레이아웃을 캐릭터에 적용합니다.")
-			_G.PluginInstallFrame.Desc2:SetText("계속하시려면 [다음] 버튼을, 설정을 건너뛰려면 [설치 건너뛰기]를 눌러주세요.")
 			_G.PluginInstallFrame.Option1:Show()
 			_G.PluginInstallFrame.Option1:SetScript("OnClick", function() InstallComplete() end)
 			_G.PluginInstallFrame.Option1:SetText("설치 건너뛰기")
-			StyleInstallFrame() -- 페이지 전환 시마다 체크
+			StyleInstallFrame() -- 강제 스타일 적용
 		end,
 		[2] = function()
 			if not _G.PluginInstallFrame then return end
 			_G.PluginInstallFrame.SubTitle:SetText("레이아웃 및 스킨")
 			_G.PluginInstallFrame.Desc1:SetText("IringUI 전용 빗살무늬 배경과 프레임 스타일을 적용합니다.")
-			_G.PluginInstallFrame.Desc2:SetText("아래 버튼을 누르면 ElvUI의 기본 외형이 IringUI 스타일로 변경됩니다.")
 			_G.PluginInstallFrame.Option1:Show()
 			_G.PluginInstallFrame.Option1:SetScript("OnClick", function() 
 				if IR.ForceMediaUpdate then IR:ForceMediaUpdate() end
@@ -109,7 +96,7 @@ IR.installTable = {
 	StepTitleTextJustification = "CENTER",
 }
 
--- 설치창이 큐에 들어올 때 스타일 적용 후킹
-hooksecurefunc(PI, "Queue", function()
-	E:Delay(0.05, StyleInstallFrame)
+-- 설치창이 생성되거나 페이지가 바뀔 때마다 스타일을 감시
+hooksecurefunc(PI, "SetPage", function()
+	E:Delay(0.01, StyleInstallFrame)
 end)
