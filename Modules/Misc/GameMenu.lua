@@ -1,15 +1,16 @@
 local IR, F, E, L, V, P, G = unpack(select(2, ...))
+-- IR:NewModule을 통해 모듈을 생성하면 자동으로 IR의 모듈 리스트에 등록됩니다.
 local module = IR:NewModule('IR_GameMenu', 'AceEvent-3.0')
 local _G = _G
 
--- 로컬 유틸리티
+-- 로컬 유틸리티 함수
 local random = random
 local CreateFrame = CreateFrame
 local CreateAnimationGroup = CreateAnimationGroup
 local GetScreenWidth, GetScreenHeight = GetScreenWidth, GetScreenHeight
 local UIFrameFadeIn = UIFrameFadeIn
 
--- 리소스 경로 (사용자 설정 필요)
+-- [중요] 텍스처 경로: 본인의 AddOns 폴더 구조에 맞게 파일이 있는지 꼭 확인하세요.
 local logoTexture = [[Interface\AddOns\ElvUI_IringUI\Media\Textures\mUI1.tga]]
 local classBannerPath = [[Interface\AddOns\ElvUI_IringUI\Media\Textures\ClassBanner\CLASS-]]
 
@@ -23,6 +24,7 @@ local NPCS = {
 
 local Sequences = {26, 52, 69, 111, 225}
 
+-- 플레이어 모델 설정 함수
 local function SetPlayerModel(self)
     local key = random(1, #Sequences)
     self:ClearModel()
@@ -35,6 +37,7 @@ local function SetPlayerModel(self)
     UIFrameFadeIn(self, 1, 0, 1)
 end
 
+-- NPC 모델 설정 함수
 local function SetNPCModel(self)
     local npcID = NPCS[random(1, #NPCS)]
     local key = random(1, #Sequences)
@@ -51,7 +54,7 @@ function module:SetupGameMenu()
     local GameMenuFrame = _G["GameMenuFrame"]
     if not GameMenuFrame then return end
 
-    -- 하단 패널 (Bottom Panel)
+    -- 1. 하단 패널 (Bottom Panel)
     if not GameMenuFrame.IRbottomPanel then
         GameMenuFrame.IRbottomPanel = CreateFrame("Frame", nil, GameMenuFrame, "BackdropTemplate")
         local bp = GameMenuFrame.IRbottomPanel
@@ -60,6 +63,7 @@ function module:SetupGameMenu()
         bp:SetSize(GetScreenWidth() + (E.Border * 2), GetScreenHeight() / 4)
         bp:SetTemplate("Transparent")
 
+        -- 판다리아 클래식 호환 애니메이션
         bp.anim = CreateAnimationGroup(bp)
         local h = bp.anim:CreateAnimation("Height")
         h:SetFromHeight(0)
@@ -75,7 +79,7 @@ function module:SetupGameMenu()
         bp.Logo:SetTexture(logoTexture)
     end
 
-    -- 상단 패널 (Top Panel)
+    -- 2. 상단 패널 (Top Panel)
     if not GameMenuFrame.IRtopPanel then
         GameMenuFrame.IRtopPanel = CreateFrame("Frame", nil, GameMenuFrame, "BackdropTemplate")
         local tp = GameMenuFrame.IRtopPanel
@@ -96,10 +100,11 @@ function module:SetupGameMenu()
         tp.classLogo = tp:CreateTexture(nil, "ARTWORK")
         tp.classLogo:SetPoint("CENTER", tp, "CENTER", 0, 0)
         tp.classLogo:SetSize(186, 186)
+        -- ElvUI 내부 클래스 변수 E.myclass 사용
         tp.classLogo:SetTexture(classBannerPath .. E.myclass)
     end
 
-    -- 좌측 플레이어 모델
+    -- 3. 좌측 플레이어 모델 홀더
     if not GameMenuFrame.IRplayerHolder then
         GameMenuFrame.IRplayerHolder = CreateFrame("Frame", nil, GameMenuFrame)
         GameMenuFrame.IRplayerHolder:SetSize(150, 150)
@@ -112,7 +117,7 @@ function module:SetupGameMenu()
         m:SetScript("OnShow", SetPlayerModel)
     end
 
-    -- 우측 NPC 모델
+    -- 4. 우측 NPC 모델 홀더
     if not GameMenuFrame.IRnpcHolder then
         GameMenuFrame.IRnpcHolder = CreateFrame("Frame", nil, GameMenuFrame)
         GameMenuFrame.IRnpcHolder:SetSize(150, 150)
@@ -126,11 +131,15 @@ function module:SetupGameMenu()
     end
 end
 
+-- 모듈 초기화 함수 (IringUI가 로드될 때 실행됨)
 function module:Initialize()
-    -- 옵션 파일의 경로인 E.db.IringUI.misc.gameMenu 참조
+    -- 옵션 파일(Options.lua) 및 프로필(Profile.lua)의 경로 확인
     if E.db.IringUI and E.db.IringUI.misc and E.db.IringUI.misc.gameMenu then
         self:SetupGameMenu()
     end
 end
 
-IR:RegisterModule(module:GetName())
+-- [수정된 부분] 
+-- RegisterModule(nil value) 오류 해결: 
+-- IR:NewModule을 썼다면 보통 IR 메인 객체에서 Initialize를 호출하므로 별도 등록 함수가 필요 없습니다.
+-- 만약 수동 등록이 필요한 구조라면 E:RegisterModule(module) 등을 사용해야 합니다.
