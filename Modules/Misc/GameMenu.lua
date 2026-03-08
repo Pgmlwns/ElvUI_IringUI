@@ -2,20 +2,26 @@ local IR, F, E, L, V, P, G = unpack(select(2, ...))
 local GM = E:NewModule('IringUI_GameMenu', 'AceHook-3.0')
 local ACH = E.Libs.ACH
 
--- [설정 주입] 기타 설정(misc) 트리 하위에 내 설정 생성
+-- [설정 주입] 기타 설정(misc) 트리 메뉴 내부로 직접 배달
 function GM:InsertOptions()
-	if not IR.Options or not IR.Options.args.misc then return end
+	-- 뼈대가 있는지 확인 (단계별 체크)
+	if not E.Options or not E.Options.args.IringUI or not E.Options.args.IringUI.args.misc then 
+		return 
+	end
 
-	-- 기타 설정 메뉴 안에 '게임 메뉴' 섹션 추가
-	IR.Options.args.misc.args.gamemenu = ACH:Group("게임 메뉴", nil, 1)
-	IR.Options.args.misc.args.gamemenu.args.enable = ACH:Toggle(
+	-- [기타 설정] 내부의 args 테이블에 'gamemenu' 그룹 생성
+	E.Options.args.IringUI.args.misc.args.gamemenu = ACH:Group("게임 메뉴", nil, 1)
+	
+	-- 체크박스 추가
+	E.Options.args.IringUI.args.misc.args.gamemenu.args.enable = ACH:Toggle(
 		"게임 메뉴 스타일 활성화", 
 		"ESC 메뉴 프레임과 버튼에 IringUI 스타일을 적용합니다.", 
 		1, nil, nil, nil,
 		function() return E.db.IringUI.general and E.db.IringUI.general.gameMenu end,
 		function(_, value) 
 			if not E.db.IringUI.general then E.db.IringUI.general = {} end
-			E.db.IringUI.general.gameMenu = value; E:StaticPopup_Show("PRIVATE_RL") 
+			E.db.IringUI.general.gameMenu = value
+			E:StaticPopup_Show("PRIVATE_RL") 
 		end
 	)
 end
@@ -35,13 +41,15 @@ function GM:StyleGameMenu()
 	end
 end
 
+-- 초기화
 function GM:Initialize()
-	-- OptionsCallback이 끝난 직후 실행되도록 후킹 (가장 확실한 주입 시점)
+	-- OptionsCallback이 끝난 직후 주입 실행 (다른 플러그인 표준 방식)
 	if IR.OptionsCallback then
 		hooksecurefunc(IR, "OptionsCallback", function()
 			self:InsertOptions()
 		end)
 	end
+    
 	if GameMenuFrame then
 		self:SecureHookScript(GameMenuFrame, "OnShow", "StyleGameMenu")
 	end
