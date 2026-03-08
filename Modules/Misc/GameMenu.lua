@@ -1,145 +1,80 @@
 local IR, F, E, L, V, P, G = unpack(select(2, ...))
--- IR:NewModule을 통해 모듈을 생성하면 자동으로 IR의 모듈 리스트에 등록됩니다.
 local module = IR:NewModule('IR_GameMenu', 'AceEvent-3.0')
 local _G = _G
 
--- 로컬 유틸리티 함수
-local random = random
-local CreateFrame = CreateFrame
-local CreateAnimationGroup = CreateAnimationGroup
-local GetScreenWidth, GetScreenHeight = GetScreenWidth, GetScreenHeight
-local UIFrameFadeIn = UIFrameFadeIn
+-- 테스트용 강제 활성화 (설정값 무시하고 일단 화면에 띄우기 위함)
+local FORCE_ENABLE = true 
 
--- [중요] 텍스처 경로: 본인의 AddOns 폴더 구조에 맞게 파일이 있는지 꼭 확인하세요.
 local logoTexture = [[Interface\AddOns\ElvUI_IringUI\Media\Textures\mUI1.tga]]
 local classBannerPath = [[Interface\AddOns\ElvUI_IringUI\Media\Textures\ClassBanner\CLASS-]]
 
--- 모델 리스트 (판다리아 및 최신 버전 포함)
-local NPCS = {
-    285, 86470, 16445, 15552, 32398, 82464, 71163, 91226, 54128, 28883, 61324, 23754, 34694, 54438, 
-    85009, 68267, 51601, 85283, 103159, 123650, 126579, 85463, 119408, 127956, 85682, 72285, 
-    67332, 71693, 66499, 139073, 139770, 140125, 141941, 143160, 143507, 143563, 143794, 143796, 
-    172854, 175783, 171716, 173586, 173992, 183638, 188844, 188861, 189152, 191627,
-}
-
-local Sequences = {26, 52, 69, 111, 225}
-
--- 플레이어 모델 설정 함수
-local function SetPlayerModel(self)
-    local key = random(1, #Sequences)
-    self:ClearModel()
-    self:SetUnit("player")
-    self:SetFacing(6.5)
-    self:SetPortraitZoom(0.05)
-    self:SetCamDistanceScale(4.8)
-    self:SetAlpha(1)
-    self:SetAnimation(Sequences[key])
-    UIFrameFadeIn(self, 1, 0, 1)
-end
-
--- NPC 모델 설정 함수
-local function SetNPCModel(self)
-    local npcID = NPCS[random(1, #NPCS)]
-    local key = random(1, #Sequences)
-    self:ClearModel()
-    self:SetCreature(npcID)
-    self:SetCamDistanceScale(1)
-    self:SetFacing(6)
-    self:SetAlpha(1)
-    self:SetAnimation(Sequences[key])
-    UIFrameFadeIn(self, 1, 0, 1)
+-- 패널 생성 함수 (레이어 및 부모 설정 강화)
+local function CreateMenuPanel(name, point)
+    -- GameMenuFrame이 아닌 UIParent를 부모로 하여 레이어 간섭 최소화
+    local frame = CreateFrame("Frame", name, _G["GameMenuFrame"], "BackdropTemplate")
+    frame:SetFrameStrata("HIGH") -- 게임 메뉴보다 위 혹은 같은 층위
+    frame:SetFrameLevel(1)
+    
+    -- 위치 설정
+    if point == "TOP" then
+        frame:SetPoint("TOP", E.UIParent, "TOP", 0, 2)
+    else
+        frame:SetPoint("BOTTOM", E.UIParent, "BOTTOM", 0, -2)
+    end
+    
+    frame:SetSize(GetScreenWidth() + 10, 1) -- 아주 작은 높이로 시작
+    frame:SetTemplate("Transparent")
+    
+    -- 애니메이션 설정
+    frame.anim = frame:CreateAnimationGroup()
+    local grow = frame.anim:CreateAnimation("Height")
+    grow:SetToHeight(GetScreenHeight() / 4)
+    grow:SetDuration(0.5)
+    grow:SetSmoothing("Out")
+    
+    -- 스크립트: 보일 때마다 재생
+    frame:SetScript("OnShow", function(self)
+        self:SetHeight(1)
+        self.anim:Play()
+    end)
+    
+    return frame
 end
 
 function module:SetupGameMenu()
     local GameMenuFrame = _G["GameMenuFrame"]
     if not GameMenuFrame then return end
 
-    -- 1. 하단 패널 (Bottom Panel)
-    if not GameMenuFrame.IRbottomPanel then
-        GameMenuFrame.IRbottomPanel = CreateFrame("Frame", nil, GameMenuFrame, "BackdropTemplate")
-        local bp = GameMenuFrame.IRbottomPanel
-        bp:SetFrameLevel(0)
-        bp:SetPoint("BOTTOM", E.UIParent, "BOTTOM", 0, -E.Border)
-        bp:SetSize(GetScreenWidth() + (E.Border * 2), GetScreenHeight() / 4)
-        bp:SetTemplate("Transparent")
-
-        -- 판다리아 클래식 호환 애니메이션
-        bp.anim = CreateAnimationGroup(bp)
-        local h = bp.anim:CreateAnimation("Height")
-        h:SetFromHeight(0)
-        h:SetToHeight(GetScreenHeight() / 4)
-        h:SetDuration(0.6)
-        h:SetSmoothing("Out")
-
-        bp:SetScript("OnShow", function(self) self.anim:Play() end)
-
-        bp.Logo = bp:CreateTexture(nil, "ARTWORK")
-        bp.Logo:SetSize(150, 150)
-        bp.Logo:SetPoint("CENTER", bp, "CENTER", 0, 0)
-        bp.Logo:SetTexture(logoTexture)
-    end
-
-    -- 2. 상단 패널 (Top Panel)
+    -- 상단 패널 강제 생성
     if not GameMenuFrame.IRtopPanel then
-        GameMenuFrame.IRtopPanel = CreateFrame("Frame", nil, GameMenuFrame, "BackdropTemplate")
-        local tp = GameMenuFrame.IRtopPanel
-        tp:SetFrameLevel(0)
-        tp:SetPoint("TOP", E.UIParent, "TOP", 0, E.Border)
-        tp:SetSize(GetScreenWidth() + (E.Border * 2), GetScreenHeight() / 4)
-        tp:SetTemplate("Transparent")
-
-        tp.anim = CreateAnimationGroup(tp)
-        local h = tp.anim:CreateAnimation("Height")
-        h:SetFromHeight(0)
-        h:SetToHeight(GetScreenHeight() / 4)
-        h:SetDuration(0.6)
-        h:SetSmoothing("Out")
-
-        tp:SetScript("OnShow", function(self) self.anim:Play() end)
-
-        tp.classLogo = tp:CreateTexture(nil, "ARTWORK")
-        tp.classLogo:SetPoint("CENTER", tp, "CENTER", 0, 0)
-        tp.classLogo:SetSize(186, 186)
-        -- ElvUI 내부 클래스 변수 E.myclass 사용
-        tp.classLogo:SetTexture(classBannerPath .. E.myclass)
+        GameMenuFrame.IRtopPanel = CreateMenuPanel("IR_TopPanel", "TOP")
+        local tex = GameMenuFrame.IRtopPanel:CreateTexture(nil, "OVERLAY")
+        tex:SetPoint("CENTER")
+        tex:SetSize(180, 180)
+        tex:SetTexture(classBannerPath .. E.myclass)
     end
 
-    -- 3. 좌측 플레이어 모델 홀더
-    if not GameMenuFrame.IRplayerHolder then
-        GameMenuFrame.IRplayerHolder = CreateFrame("Frame", nil, GameMenuFrame)
-        GameMenuFrame.IRplayerHolder:SetSize(150, 150)
-        GameMenuFrame.IRplayerHolder:SetPoint("RIGHT", GameMenuFrame, "LEFT", -300, 0)
-
-        local m = CreateFrame("PlayerModel", nil, GameMenuFrame.IRplayerHolder)
-        m:SetPoint("CENTER")
-        m:SetSize(GetScreenWidth() * 1.5, GetScreenHeight() * 1.5)
-        m:SetScale(0.8)
-        m:SetScript("OnShow", SetPlayerModel)
+    -- 하단 패널 강제 생성
+    if not GameMenuFrame.IRbottomPanel then
+        GameMenuFrame.IRbottomPanel = CreateMenuPanel("IR_BottomPanel", "BOTTOM")
+        local tex = GameMenuFrame.IRbottomPanel:CreateTexture(nil, "OVERLAY")
+        tex:SetPoint("CENTER")
+        tex:SetSize(140, 140)
+        tex:SetTexture(logoTexture)
     end
 
-    -- 4. 우측 NPC 모델 홀더
-    if not GameMenuFrame.IRnpcHolder then
-        GameMenuFrame.IRnpcHolder = CreateFrame("Frame", nil, GameMenuFrame)
-        GameMenuFrame.IRnpcHolder:SetSize(150, 150)
-        GameMenuFrame.IRnpcHolder:SetPoint("LEFT", GameMenuFrame, "RIGHT", 300, 0)
-
-        local m = CreateFrame("PlayerModel", nil, GameMenuFrame.IRnpcHolder)
-        m:SetPoint("CENTER")
-        m:SetSize(400, 400)
-        m:SetScale(0.8)
-        m:SetScript("OnShow", SetNPCModel)
-    end
+    -- ESC 메뉴가 열릴 때 우리 패널도 강제로 Show 시킴 (Hooking)
+    GameMenuFrame:HookScript("OnShow", function()
+        if GameMenuFrame.IRtopPanel then GameMenuFrame.IRtopPanel:Show() end
+        if GameMenuFrame.IRbottomPanel then GameMenuFrame.IRbottomPanel:Show() end
+    end)
 end
 
--- 모듈 초기화 함수 (IringUI가 로드될 때 실행됨)
 function module:Initialize()
-    -- 옵션 파일(Options.lua) 및 프로필(Profile.lua)의 경로 확인
-    if E.db.IringUI and E.db.IringUI.misc and E.db.IringUI.misc.gameMenu then
-        self:SetupGameMenu()
-    end
+    -- 초기화 시점에 즉시 실행 (조건문 잠시 제거하여 테스트)
+    self:SetupGameMenu()
 end
 
--- [수정된 부분] 
--- RegisterModule(nil value) 오류 해결: 
--- IR:NewModule을 썼다면 보통 IR 메인 객체에서 Initialize를 호출하므로 별도 등록 함수가 필요 없습니다.
--- 만약 수동 등록이 필요한 구조라면 E:RegisterModule(module) 등을 사용해야 합니다.
+-- IringUI 시스템에 모듈 등록 (RegisterModule 에러 방지 위해 수동 호출 확인)
+-- 만약 IR:NewModule이 Initialize를 호출하지 않는 구조라면 아래 줄이 필요할 수 있습니다.
+-- E:Delay(1, function() module:Initialize() end) 
