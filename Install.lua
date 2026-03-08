@@ -1,36 +1,33 @@
 local IR, F, E, L, V, P, G = unpack(select(2, ...))
 local PI = E:GetModule('PluginInstaller')
 
--- 설치 완료 함수
 local function InstallComplete()
 	E.db.IringUI.install_complete = E.version
 	_G.ReloadUI()
 end
 
--- [해결책] 설치창 배경을 깨끗이 지우고 IringUI 스타일 입히기
+-- 스타일 적용 함수 (F 보따리 함수 사용으로 에러 방지)
 local function StyleInstallFrame()
 	local f = _G.PluginInstallFrame
 	if not f then return end
 
-	-- 1. 엘브가 그려놓은 기존 배경 텍스처들을 싹 지움 (제공해주신 소스 활용)
+	-- 엘브 기본 배경 제거 및 스타일 적용
 	if f.backdrop then
-		f.backdrop:StripFrame(true) -- 배경 지우기
-		f.backdrop:Styling()        -- 우리 스타일 입히기
+		F.StripFrame(f.backdrop, true)
+		F.Styling(f.backdrop)
 	end
 
-	-- 2. 메인 프레임 본체도 지우고 다시 입힘
-	f:StripFrame(true)
-	f:Styling()
+	F.StripFrame(f, true)
+	F.Styling(f)
 
-	-- 3. 제목 줄 처리
 	local title = _G.PluginInstallTitleFrame
 	if title then
-		title:StripFrame(true)
-		title:Styling()
+		F.StripFrame(title, true)
+		F.Styling(title)
 	end
 end
 
--- [이후 내용은 기존 Install.lua와 동일하게 유지]
+-- [이후 인스톨 테이블 및 가로채기 로직은 동일하게 유지하되 함수 호출만 변경]
 function IR:InterceptInstaller()
 	if _G.ElvUIInstallFrame then _G.ElvUIInstallFrame:Hide() end
 	E.Install = function() 
@@ -47,7 +44,7 @@ IR.installTable = {
 	["Name"] = "|cffff69b4Iring|r|cffb2b2b2UI|r",
 	["Title"] = "|cffff69b4Iring|r|cffb2b2b2UI|r 설치 가이드",
 	["Pages"] = {
-	 [1] = function()
+		[1] = function()
 			if not _G.PluginInstallFrame then return end
 			_G.PluginInstallFrame.SubTitle:SetText("환영합니다")
 			_G.PluginInstallFrame.Desc1:SetText("IringUI 레이아웃 설치를 시작합니다.")
@@ -56,7 +53,7 @@ IR.installTable = {
 			_G.PluginInstallFrame.Option1:SetScript("OnClick", function() InstallComplete() end)
 			StyleInstallFrame()
 		end,
-	 [2] = function()
+		[2] = function()
 			if not _G.PluginInstallFrame then return end
 			_G.PluginInstallFrame.SubTitle:SetText("레이아웃")
 			_G.PluginInstallFrame.Desc1:SetText("스타일을 적용합니다.")
@@ -68,7 +65,7 @@ IR.installTable = {
 			end)
 			StyleInstallFrame()
 		end,
-	 [3] = function()
+		[3] = function()
 			if not _G.PluginInstallFrame then return end
 			_G.PluginInstallFrame.SubTitle:SetText("완료")
 			_G.PluginInstallFrame.Option1:Show()
@@ -81,7 +78,6 @@ IR.installTable = {
 	StepTitlesColorSelected = RAID_CLASS_COLORS[E.myclass],
 }
 
--- 페이지 바뀔 때마다 스타일 감시
 hooksecurefunc(PI, "SetPage", function()
 	E:Delay(0.01, StyleInstallFrame)
 end)
