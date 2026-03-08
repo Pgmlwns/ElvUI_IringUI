@@ -4,13 +4,13 @@
 ## Version: 1.0
 ## RequiredDeps: ElvUI
 
-Init.lua             # 1. 애드온 초기화 및 전역 변수(IR) 생성
-Config\Core.lua      # 2. 데이터베이스(P) 기본값 설정 (가장 중요)
-Media.lua            # 3. 텍스처 및 미디어 경로 등록
-Options.lua          # 4. 설정창 메인 뼈대 (IR:OptionsCallback)
+Init.lua
+Config\Core.lua
+Media.lua
+Options.lua
 
-Styling.lua          # 5. 공유 함수 (IR.Styling, IR.StyleButton)
-Layout.lua           # 6. 레이아웃 관련
-Install.lua          # 7. 설치 창 관련
+Styling.lua
+Layout.lua
+Install.lua
 
-Modules\Misc\GameMenu.lua  # 8. 게임 메뉴 기능 + 설정 주입
+Modules\Misc\GameMenu.lua
