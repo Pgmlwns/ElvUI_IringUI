@@ -8,3 +8,4 @@ P["IringUI"]["skin"] = P["IringUI"]["skin"] or { ["enable"] = true, ["stripes"] 
 P["IringUI"]["layout"] = P["IringUI"]["layout"] or { ["topBar"] = true, ["bottomBar"] = true }
 P["IringUI"]["autobar"] = P["IringUI"]["autobar"] or { ["enable"] = true } -- [해결 포인트]
 P["IringUI"]["general"] = P["IringUI"]["general"] or { ["gameMenu"] = true }
+P["IringUI"]["autobar"] = { ["enable"] = true }
