@@ -53,3 +53,15 @@ IR.installTable = {
 	},
 	["StepTitlesColorSelected"] = RAID_CLASS_COLORS[E.myclass],
 }
+-- [마지막 퍼즐] 페이지가 바뀔 때마다 설치창 배경에 Styling을 강제로 재실행
+hooksecurefunc(PI, "SetPage", function()
+	local f = _G.PluginInstallFrame
+	if f and f.backdrop and f.backdrop.Styling then
+		f.backdrop:Styling()
+		
+		-- 설치창 배경색 위로 빗살무늬를 강제로 끄집어올림 (레이어 격상)
+		if f.backdrop.IRstyle and f.backdrop.IRstyle.stripes then
+			f.backdrop.IRstyle.stripes:SetDrawLayer("OVERLAY", 7)
+		end
+	end
+end)
