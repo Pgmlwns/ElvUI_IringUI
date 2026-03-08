@@ -2,44 +2,49 @@ local IR, F, E, L, V, P, G = unpack(select(2, ...))
 
 IR.Styling = {}
 
--- [핵심] 스타일링 적용 함수 (그림자 농도 조절 버전)
+-- [핵심] 스타일링 적용 함수 (직업 색상 그림자 적용)
 F.Styling = function(f, useStripes, useShadow)
-	-- 설정값 체크 (에러 방지)
 	if not E.db or not E.db.IringUI or not E.db.IringUI.skin.enable then return end
 	if not f or f.IRstyle or f.__style then return end
 
-	-- 배경색을 묵직하게 고정 (너무 검지 않게 0.08 정도로 상향)
+	-- 배경색 고정
 	if f.SetBackdropColor then
-		f:SetBackdropColor(0.08, 0.08, 0.08, 0.85) 
+		f:SetBackdropColor(0.06, 0.06, 0.06, 0.85) 
 	end
 
 	local style = CreateFrame("Frame", nil, f, "BackdropTemplate")
 	style:SetAllPoints(f)
 	style:SetFrameLevel(f:GetFrameLevel() + 1)
 
-	-- 1. 빗살무늬 (Stripes) 선명하게 입히기
+	-- 1. 빗살무늬 (Stripes)
 	if E.db.IringUI.skin.stripes and not useStripes then
-		local stripes = style:CreateTexture(nil, "OVERLAY", nil, 6) -- 그림자보다 아래 레이어
+		local stripes = style:CreateTexture(nil, "OVERLAY", nil, 6)
 		stripes:SetInside(style, 1, -1)
 		stripes:SetTexture(IR.Media.Stripes, true, true)
 		stripes:SetHorizTile(true)
 		stripes:SetVertTile(true)
 		stripes:SetBlendMode("ADD")
-		stripes:SetAlpha(0.65) -- 무늬 농도 조절
+		stripes:SetAlpha(0.55) 
 		style.stripes = stripes
 	end
 
-	-- 2. 그림자 효과 (Shadow) - 가장자리가 너무 어두운 문제 해결
+	-- 2. 그림자 효과 (Shadow) - 클래스 색상 적용 버전
 	if E.db.IringUI.skin.shadow and not useShadow then
-		local mshadow = style:CreateTexture(nil, "OVERLAY", nil, 7) -- 최상단 레이어
-		
-		-- [핵심 수정] 테두리에서 2픽셀 안쪽으로 배치하여 클래스 테두리 색상을 가리지 않게 함
-		mshadow:SetInside(style, 2, -2) 
+		local mshadow = style:CreateTexture(nil, "OVERLAY", nil, 7)
+		mshadow:SetInside(style, 0, 0) -- 테두리 끝까지 색상이 차오르게 설정
 		mshadow:SetTexture(IR.Media.Overlay)
 		
-		-- [핵심 수정] 투명도를 0.3으로 낮추고 밝은 회색을 섞어 테두리 시인성 확보
-		mshadow:SetVertexColor(0.8, 0.8, 0.8) 
-		mshadow:SetAlpha(0.25) -- 기존보다 훨씬 연하게 설정하여 테두리를 살림
+		-- [핵심 수정] 현재 캐릭터의 직업 색상 가져오기
+		local color = RAID_CLASS_COLORS[E.myclass]
+		
+		-- [핵심 수정] 그림자 텍스처에 직업 색상 입히기 (r, g, b)
+		mshadow:SetVertexColor(color.r, color.g, color.b) 
+		
+		-- [핵심 수정] 색상이 잘 보이도록 투명도를 0.8 정도로 높임 (영롱한 발광 효과)
+		mshadow:SetAlpha(0.8) 
+		
+		-- 발광 느낌을 위해 블렌드 모드 추가 (선택 사항)
+		mshadow:SetBlendMode("ADD") 
 
 		style.mshadow = mshadow
 	end
@@ -52,17 +57,12 @@ end
 local function AddIringAPI()
 	local frame = CreateFrame("Frame")
 	local mt = getmetatable(frame).__index
-	
-	-- 1. 모든 프레임에서 :Styling() 호출 가능하게 함
 	if not mt.Styling then mt.Styling = F.Styling end
-
-	-- 2. ElvUI가 배경을 깔 때마다 자동으로 우리 스타일 입히기
 	if mt.SetTemplate then
 		hooksecurefunc(mt, "SetTemplate", function(f)
 			if f and f.Styling then f:Styling() end
 		end)
 	end
-    
 	if mt.CreateBackdrop then
 		hooksecurefunc(mt, "CreateBackdrop", function(f)
 			if f and f.Styling then f:Styling() end
@@ -70,10 +70,9 @@ local function AddIringAPI()
 	end
 end
 
--- API 주입 실행
 AddIringAPI()
 
--- 기존 프레임(채팅창 등) 소급 적용
+-- 소급 적용
 local function ApplyToExisting()
 	local panels = {
 		_G["LeftChatPanel"], _G["RightChatPanel"], _G["MinimapPanel"], 
