@@ -1,16 +1,18 @@
-local E, L, V, P, G = unpack(select(2, ...)) -- 첫 번째 인자인 IR 대신 E를 먼저 받음
-local IR = E:GetModule('IringUI', true) or _G["IringUI"] -- IringUI 메인 객체 찾기
-if not IR then return end -- IR을 못 찾으면 실행 중단
+-- ElvUI 전역 객체 가져오기
+local E = unpack(_G.ElvUI) 
+local IR = E:GetModule('IringUI', true) -- IringUI 메인 모듈 이름 확인 필요
 
+-- 모듈 생성
 local module = IR:NewModule('IR_GameMenu', 'AceEvent-3.0')
 local _G = _G
 
+-- 설정 및 경로
 local logoTexture = [[Interface\AddOns\ElvUI_IringUI\Media\Textures\mUI1.tga]]
 local classBannerPath = [[Interface\AddOns\ElvUI_IringUI\Media\Textures\ClassBanner\CLASS-]]
 
--- 패널 생성 함수
+-- 패널 생성 로직
 local function CreateMenuPanel(name, point)
-    local frame = CreateFrame("Frame", name, _G["GameMenuFrame"], "BackdropTemplate")
+    local frame = CreateFrame("Frame", name, _G.GameMenuFrame, "BackdropTemplate")
     frame:SetFrameStrata("HIGH")
     frame:SetFrameLevel(1)
     
@@ -20,16 +22,18 @@ local function CreateMenuPanel(name, point)
         frame:SetPoint("BOTTOM", E.UIParent, "BOTTOM", 0, -1)
     end
     
+    -- 초기 상태: 높이 1, 너비는 화면 전체
     frame:SetSize(GetScreenWidth() + 10, 1)
     frame:SetTemplate("Transparent")
     
-    -- 애니메이션
+    -- 애니메이션 그룹
     frame.anim = frame:CreateAnimationGroup()
     local grow = frame.anim:CreateAnimation("Height")
     grow:SetToHeight(GetScreenHeight() / 4)
     grow:SetDuration(0.5)
     grow:SetSmoothing("Out")
     
+    -- 메뉴가 열릴 때마다 애니메이션 재생
     frame:SetScript("OnShow", function(self)
         self:SetHeight(1)
         self.anim:Play()
@@ -39,38 +43,31 @@ local function CreateMenuPanel(name, point)
 end
 
 function module:SetupGameMenu()
-    local GameMenuFrame = _G["GameMenuFrame"]
+    local GameMenuFrame = _G.GameMenuFrame
     if not GameMenuFrame or GameMenuFrame.IRtopPanel then return end
 
-    -- 상단 패널
+    -- 상단 패널 생성
     GameMenuFrame.IRtopPanel = CreateMenuPanel("IR_TopPanel", "TOP")
     local t1 = GameMenuFrame.IRtopPanel:CreateTexture(nil, "OVERLAY")
     t1:SetPoint("CENTER")
     t1:SetSize(180, 180)
     t1:SetTexture(classBannerPath .. E.myclass)
 
-    -- 하단 패널
+    -- 하단 패널 생성
     GameMenuFrame.IRbottomPanel = CreateMenuPanel("IR_BottomPanel", "BOTTOM")
     local t2 = GameMenuFrame.IRbottomPanel:CreateTexture(nil, "OVERLAY")
     t2:SetPoint("CENTER")
     t2:SetSize(140, 140)
     t2:SetTexture(logoTexture)
 
-    -- ESC 누를 때 강제 출력 보정
-    GameMenuFrame:HookScript("OnShow", function()
-        GameMenuFrame.IRtopPanel:Show()
-        GameMenuFrame.IRbottomPanel:Show()
-    end)
+    -- ESC 메뉴가 이미 열려 있을 수도 있으므로 Show 강제 호출
+    GameMenuFrame.IRtopPanel:Show()
+    GameMenuFrame.IRbottomPanel:Show()
 end
 
 function module:Initialize()
-    -- 설정값 확인 (프로필 DB에 misc.gameMenu가 있는지 확인)
-    local db = E.db.IringUI
-    if db and db.misc and db.misc.gameMenu then
-        -- 프레임 생성을 지연시켜 UI 로드 오류 방지
+    -- 옵션 DB 확인 (경로: E.db.IringUI.misc.gameMenu)
+    if E.db.IringUI and E.db.IringUI.misc and E.db.IringUI.misc.gameMenu then
         self:SetupGameMenu()
     end
 end
-
--- IringUI가 이 모듈을 인식하도록 등록
--- (보통 IR:NewModule 시점에 자동으로 관리 리스트에 들어갑니다)
