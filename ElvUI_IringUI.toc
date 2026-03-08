@@ -4,8 +4,8 @@
 ## Version: 1.0
 ## RequiredDeps: ElvUI
 
-Config\Core.lua
 Init.lua
+Config\Core.lua
 Options.lua
 Styling.lua
 Modules\Misc\GameMenu.lua
