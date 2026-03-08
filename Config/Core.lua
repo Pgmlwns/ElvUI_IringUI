@@ -5,4 +5,4 @@ P["IringUI"] = P["IringUI"] or {}
 P["IringUI"]["skin"] = P["IringUI"]["skin"] or { ["enable"] = true, ["stripes"] = true, ["shadow"] = true }
 P["IringUI"]["layout"] = P["IringUI"]["layout"] or { ["topBar"] = true, ["bottomBar"] = true }
 P["IringUI"]["autobar"] = P["IringUI"]["autobar"] or { ["enable"] = true }
-P["IringUI"]["misc"] = P["IringUI"]["misc"] or { ["gameMenu"] = true } -- general 대신 misc 사용
+--P["IringUI"]["misc"] = P["IringUI"]["misc"] or { ["gameMenu"] = true } -- general 대신 misc 사용
