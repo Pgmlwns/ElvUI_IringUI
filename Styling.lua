@@ -8,9 +8,9 @@ F.Styling = function(f, useStripes, useShadow)
 	if not E.db or not E.db.IringUI or not E.db.IringUI.skin.enable then return end
 	if not f or f.IRstyle or f.__style then return end
 
-	-- 배경색 고정 (묵직한 다크 모드)
+	-- 배경색 (기존과 동일하게 유지)
 	if f.SetBackdropColor then
-		f:SetBackdropColor(0.06, 0.06, 0.06, 0.85) 
+		f:SetBackdropColor(0.06, 0.06, 0.06, 0.8) 
 	end
 
 	local style = CreateFrame("Frame", nil, f, "BackdropTemplate")
@@ -29,21 +29,19 @@ F.Styling = function(f, useStripes, useShadow)
 		style.stripes = stripes
 	end
 
-	-- 2. 그림자 효과 (Shadow) - [수정] 은은한 직업 색상 적용
+	-- 2. 그림자 효과 (Shadow) - [설치창 로직 100% 동일 적용]
 	if E.db.IringUI.skin.shadow and not useShadow then
 		local mshadow = style:CreateTexture(nil, "OVERLAY", nil, 7)
 		mshadow:SetInside(style, 0, 0)
 		mshadow:SetTexture(IR.Media.Overlay)
 		
-		-- 캐릭터 직업 색상 가져오기
+		-- 캐릭터 직업 색상 그대로 가져오기
 		local color = RAID_CLASS_COLORS[E.myclass]
 		
-		-- [핵심] 톤 다운된 직업 색상 (색상에 0.7을 곱해 차분하게 만듦)
-		mshadow:SetVertexColor(color.r * 0.7, color.g * 0.7, color.b * 0.7) 
-		
-		-- [핵심] 발광 효과 제거 및 아주 연한 투명도(0.4) 적용
+		-- 설치창에서 성공했던 그 색상과 투명도값
+		mshadow:SetVertexColor(color.r, color.g, color.b) 
 		mshadow:SetBlendMode("BLEND") 
-		mshadow:SetAlpha(0.4) 
+		mshadow:SetAlpha(0.4) -- 아주 은은하게 묻어나는 설정
 
 		style.mshadow = mshadow
 	end
@@ -71,7 +69,7 @@ end
 
 AddIringAPI()
 
--- 소급 적용
+-- 기존 프레임 소급 적용
 local function ApplyToExisting()
 	local panels = {
 		_G["LeftChatPanel"], _G["RightChatPanel"], _G["MinimapPanel"], 
