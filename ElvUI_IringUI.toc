@@ -14,5 +14,5 @@ Layout.lua
 Options.lua
 Install.lua
 
-Modules\Misc\GameMenu.lua
 Config\GameMenu.lua
+Modules\Misc\GameMenu.lua
