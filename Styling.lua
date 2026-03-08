@@ -3,7 +3,8 @@ local IR, F, E, L, V, P, G = unpack(select(2, ...))
 
 -- [1] 모든 프레임 및 버튼에 빗살무늬와 그림자를 입히는 함수
 local function Styling(f, useStripes, useShadow)
-    if not E.db or not E.db.IringUI or not E.db.IringUI.skin.enable then return end
+    -- [에러 수정] DB가 완전히 로드되지 않은 시점의 호출을 방지하기 위해 단계별 nil 체크 추가
+    if not E.db or not E.db.IringUI or not E.db.IringUI.skin or not E.db.IringUI.skin.enable then return end
     if not f or f.IRstyle or f.__style then return end
 
     local frameName = f.GetName and f:GetName()
