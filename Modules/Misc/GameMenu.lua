@@ -1,4 +1,3 @@
--- IringUI 전용 선언
 local addon, Engine = ...
 local IR, F, E, L, V, P, G = unpack(Engine)
 
@@ -8,33 +7,51 @@ local _G = _G
 local logoTexture = [[Interface\AddOns\ElvUI_IringUI\Media\Textures\mUI1.tga]]
 local classBannerPath = [[Interface\AddOns\ElvUI_IringUI\Media\Textures\ClassBanner\CLASS-]]
 
--- 패널 생성 함수
+-- 패널 생성 및 애니메이션 로직
 local function CreateMenuPanel(name, point)
     local GameMenuFrame = _G["GameMenuFrame"]
     local frame = CreateFrame("Frame", name, GameMenuFrame, "BackdropTemplate")
     frame:SetFrameStrata("HIGH")
     frame:SetFrameLevel(1)
     
-    if point == "TOP" then
-        frame:SetPoint("TOP", E.UIParent, "TOP", 0, 1)
-    else
-        frame:SetPoint("BOTTOM", E.UIParent, "BOTTOM", 0, -1)
-    end
-    
-    -- 초기 너비는 화면 전체, 높이는 1
-    frame:SetSize(GetScreenWidth() + 20, 1)
+    local panelHeight = GetScreenHeight() / 4
+    frame:SetSize(GetScreenWidth() + 20, panelHeight)
     frame:SetTemplate("Transparent")
     
-    -- [수정] 클래식 호환 애니메이션 설정
+    -- 애니메이션 그룹 생성
     frame.anim = frame:CreateAnimationGroup()
-    local grow = frame.anim:CreateAnimation("Height")
-    -- SetToHeight 대신 SetChange 사용 (판다리아 클래식 API)
-    grow:SetChange(GetScreenHeight() / 4) 
-    grow:SetDuration(0.5)
-    grow:SetSmoothing("Out")
     
+    -- [수정] 클래식에서 가장 안정적인 Translation(이동) 애니메이션 사용
+    local slide = frame.anim:CreateAnimation("Translation")
+    slide:SetDuration(0.5)
+    slide:SetSmoothing("Out")
+    
+    if point == "TOP" then
+        frame:SetPoint("TOP", E.UIParent, "TOP", 0, panelHeight) -- 화면 밖(위쪽)에서 시작
+        slide:SetOffset(0, -panelHeight) -- 아래로 내려옴
+    else
+        frame:SetPoint("BOTTOM", E.UIParent, "BOTTOM", 0, -panelHeight) -- 화면 밖(아래쪽)에서 시작
+        slide:SetOffset(0, panelHeight) -- 위로 올라옴
+    end
+
+    -- 애니메이션이 끝나면 위치 고정
+    frame.anim:SetScript("OnFinished", function(self)
+        local parent = self:GetParent()
+        parent:ClearAllPoints()
+        if point == "TOP" then
+            parent:SetPoint("TOP", E.UIParent, "TOP", 0, 1)
+        else
+            parent:SetPoint("BOTTOM", E.UIParent, "BOTTOM", 0, -1)
+        end
+    end)
+
     frame:SetScript("OnShow", function(self)
-        self:SetHeight(1) -- 시작 시 높이 초기화
+        self:ClearAllPoints()
+        if point == "TOP" then
+            self:SetPoint("TOP", E.UIParent, "TOP", 0, panelHeight)
+        else
+            self:SetPoint("BOTTOM", E.UIParent, "BOTTOM", 0, -panelHeight)
+        end
         self.anim:Play()
     end)
     
@@ -58,25 +75,9 @@ function module:SetupGameMenu()
     t2:SetPoint("CENTER")
     t2:SetSize(140, 140)
     t2:SetTexture(logoTexture)
-
-    -- 모델 홀더 (간소화)
-    if not GameMenuFrame.IRplayerHolder then
-        local ph = CreateFrame("Frame", nil, GameMenuFrame)
-        ph:SetSize(150, 150)
-        ph:SetPoint("RIGHT", GameMenuFrame, "LEFT", -300, 0)
-        local pm = CreateFrame("PlayerModel", nil, ph)
-        pm:SetPoint("CENTER")
-        pm:SetSize(GetScreenWidth() * 1.5, GetScreenHeight() * 1.5)
-        pm:SetScript("OnShow", function(self)
-            self:SetUnit("player")
-            self:SetAnimation(69)
-        end)
-        GameMenuFrame.IRplayerHolder = ph
-    end
 end
 
 function module:Initialize()
-    -- 옵션 경로 확인
     if E.db.IringUI and E.db.IringUI.misc and E.db.IringUI.misc.gameMenu then
         self:SetupGameMenu()
     end
