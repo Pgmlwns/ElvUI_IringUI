@@ -1,8 +1,8 @@
 -- 순서: IR, F, E, L, V, P, G
 local IR, F, E, L, V, P, G = unpack(select(2, ...))
 
+-- [건드리지 않음] 기존 빗살무늬 및 그림자 로직
 local function Styling(f, useStripes, useShadow)
-    -- 이제 E가 nil이 아니므로 정상 작동합니다.
     if not E.db or not E.db.IringUI or not E.db.IringUI.skin.enable then return end
     if not f or f.IRstyle or f.__style then return end
 
@@ -40,18 +40,50 @@ local function Styling(f, useStripes, useShadow)
     f.__style = 1
 end
 
--- 버튼 및 프레임 API 주입
+-- [신규] 캐릭터 탭 및 버튼 테두리 하이라이트 함수
+local function StyleButton(f)
+    if not f or f.IringBtnStyled then return end
+    f:HookScript("OnEnter", function(self)
+        local color = RAID_CLASS_COLORS[E.myclass]
+        local target = self.backdrop or self
+        if target.SetBackdropBorderColor then
+            target:SetBackdropBorderColor(color.r, color.g, color.b)
+        end
+    end)
+    f:HookScript("OnLeave", function(self)
+        local target = self.backdrop or self
+        if target.SetBackdropBorderColor then
+            target:SetBackdropBorderColor(unpack(E.media.bordercolor))
+        end
+    end)
+    f.IringBtnStyled = true
+end
+
+-- [수정] API 주입 및 하이라이트 로직 추가
 local function AddIringAPI()
     local mt = getmetatable(CreateFrame("Frame")).__index
     local bt = getmetatable(CreateFrame("Button")).__index
     if not mt.Styling then mt.Styling = Styling end
     if not bt.Styling then bt.Styling = Styling end
 
+    -- 공통 적용 함수
+    local function ApplyStyle(f)
+        if not f then return end
+        if f.Styling then f:Styling() end -- 기존 빗살무늬 적용
+        
+        -- 버튼이거나 이름에 'Tab'이 들어간 프레임에 테두리 하이라이트 추가
+        local name = f.GetName and f:GetName()
+        if f:IsObjectType("Button") or (name and name:find("Tab")) then
+            StyleButton(f)
+        end
+    end
+
     if mt.SetTemplate then
-        hooksecurefunc(mt, "SetTemplate", function(f) if f and f.Styling then f:Styling() end end)
+        hooksecurefunc(mt, "SetTemplate", ApplyStyle)
     end
     if bt.SetTemplate then
-        hooksecurefunc(bt, "SetTemplate", function(f) if f and f.Styling then f:Styling() end end)
+        hooksecurefunc(bt, "SetTemplate", ApplyStyle)
     end
 end
+
 AddIringAPI()
