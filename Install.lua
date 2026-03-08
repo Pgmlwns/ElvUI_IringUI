@@ -7,37 +7,49 @@ local function InstallComplete()
 	_G.ReloadUI()
 end
 
--- [최종 해결] 설치창 배경에 빗살무늬 직접 강제 생성
-local function StyleInstallFrame()
+-- [최후의 수단] ElvUI 배경과 별개로 IringUI 전용 배경층을 새로 생성
+local function CreatePersistentBackground()
 	local f = _G.PluginInstallFrame
-	if not f or not f.backdrop then return end
+	if not f then return end
 
-	-- 1. 메인 배경(backdrop)에 스타일이 입혀졌는지 확인
-	if not f.backdrop.IringStripes then
-		-- 이미 스타일링 엔진이 있다면 사용하고, 아니면 직접 생성
-		local stripes = f.backdrop:CreateTexture(nil, "OVERLAY")
-		stripes:SetInside(f.backdrop, 1, -1)
+	-- 1. 메인 배경 뒤에 고정될 IringUI 전용 배경 생성
+	if not f.IringBG then
+		local bg = CreateFrame("Frame", nil, f, "BackdropTemplate")
+		bg:SetAllPoints(f)
+		bg:SetFrameLevel(f:GetFrameLevel() - 1) -- 설치창보다 한 단계 아래 배치
+		
+		-- 빗살무늬 텍스처 직접 생성
+		local stripes = bg:CreateTexture(nil, "BACKGROUND")
+		stripes:SetAllPoints(bg)
 		stripes:SetTexture(IR.Media.Stripes, true, true)
 		stripes:SetHorizTile(true)
 		stripes:SetVertTile(true)
 		stripes:SetBlendMode("ADD")
-		stripes:SetDrawLayer("OVERLAY", 7) -- 최상단 레이어로 강제 고정
+		stripes:SetAlpha(0.5) -- 은은하게 조절
 		
-		f.backdrop.IringStripes = stripes
+		f.IringBG = bg
 	end
 
-	-- 2. 제목 프레임 배경도 강제 처리
+	-- 2. ElvUI가 기본 배경색으로 우리 무늬를 가리지 못하게 투명도 조절
+	if f.backdrop then
+		f.backdrop:SetAlpha(0.3) -- ElvUI 배경을 반투명하게 해서 우리 무늬가 보이게 함
+	end
+    
+	-- 3. 타이틀 바 배경 처리
 	local title = _G.PluginInstallTitleFrame
-	if title and title.backdrop and not title.backdrop.IringStripes then
-		local stripes = title.backdrop:CreateTexture(nil, "OVERLAY")
-		stripes:SetInside(title.backdrop, 1, -1)
+	if title and not title.IringBG then
+		local bg = CreateFrame("Frame", nil, title, "BackdropTemplate")
+		bg:SetAllPoints(title)
+		bg:SetFrameLevel(title:GetFrameLevel() - 1)
+		
+		local stripes = bg:CreateTexture(nil, "BACKGROUND")
+		stripes:SetAllPoints(bg)
 		stripes:SetTexture(IR.Media.Stripes, true, true)
 		stripes:SetHorizTile(true)
 		stripes:SetVertTile(true)
 		stripes:SetBlendMode("ADD")
-		stripes:SetDrawLayer("OVERLAY", 7)
 		
-		title.backdrop.IringStripes = stripes
+		title.IringBG = bg
 	end
 end
 
@@ -55,7 +67,7 @@ function IR:InterceptInstaller()
 	end
 end
 
--- 설치 가이드 테이블 (3페이지)
+-- 설치 가이드 테이블
 IR.installTable = {
 	["Name"] = "|cffff69b4Iring|r|cffb2b2b2UI|r",
 	["Title"] = "|cffff69b4Iring|r|cffb2b2b2UI|r 설치 가이드",
@@ -70,7 +82,7 @@ IR.installTable = {
 			_G.PluginInstallFrame.Option1:Show()
 			_G.PluginInstallFrame.Option1:SetScript("OnClick", function() InstallComplete() end)
 			_G.PluginInstallFrame.Option1:SetText("설치 건너뛰기")
-			StyleInstallFrame()
+			CreatePersistentBackground() -- 배경 생성 및 유지
 		end,
 		[2] = function()
 			if not _G.PluginInstallFrame then return end
@@ -83,7 +95,7 @@ IR.installTable = {
 				E:Print("IringUI 스타일 및 레이아웃 적용 완료!")
 			end)
 			_G.PluginInstallFrame.Option1:SetText("스타일 적용")
-			StyleInstallFrame()
+			CreatePersistentBackground()
 		end,
 		[3] = function()
 			if not _G.PluginInstallFrame then return end
@@ -92,7 +104,7 @@ IR.installTable = {
 			_G.PluginInstallFrame.Option1:Show()
 			_G.PluginInstallFrame.Option1:SetScript("OnClick", function() InstallComplete() end)
 			_G.PluginInstallFrame.Option1:SetText("완료")
-			StyleInstallFrame()
+			CreatePersistentBackground()
 		end,
 	},
 	["StepTitles"] = {
@@ -106,7 +118,7 @@ IR.installTable = {
 	StepTitleTextJustification = "CENTER",
 }
 
--- [결정타] 페이지가 바뀔 때마다 0.01초 뒤에 배경을 강제로 덮어씌움
+-- 페이지가 바뀔 때마다 배경 상태를 다시 체크
 hooksecurefunc(PI, "SetPage", function()
-	E:Delay(0.01, StyleInstallFrame)
+	E:Delay(0.01, CreatePersistentBackground)
 end)

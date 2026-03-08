@@ -48,5 +48,6 @@
         "PARTY",
         "GUILD",
         "RAID"
-    ]
+    ],
+    "Lua.type.weakUnionCheck": true
 }
