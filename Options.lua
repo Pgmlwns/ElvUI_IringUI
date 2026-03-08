@@ -13,8 +13,8 @@ function IR:OptionsCallback()
 	E.Options.args.IringUI.args.general = ACH:Group("일반 설정", nil, 1, "tab")
 	local general = E.Options.args.IringUI.args.general.args
 
-	-- 스타일 탭
-	general.style = ACH:Group("스타일", nil = 1)
+	-- 스타일 탭 (오타 수정됨: nil, 1)
+	general.style = ACH:Group("스타일", nil, 1)
 	general.style.args.enable = ACH:Toggle("스킨 활성화", nil, 1, nil, nil, nil, function() return E.db.IringUI.skin.enable end, function(_, v) E.db.IringUI.skin.enable = v; UpdateRL() end)
 	general.style.args.stripes = ACH:Toggle("빗살무늬", nil, 2, nil, nil, nil, function() return E.db.IringUI.skin.stripes end, function(_, v) E.db.IringUI.skin.stripes = v; UpdateRL() end)
 	general.style.args.shadow = ACH:Toggle("그림자 효과", nil, 3, nil, nil, nil, function() return E.db.IringUI.skin.shadow end, function(_, v) E.db.IringUI.skin.shadow = v; UpdateRL() end)
@@ -32,7 +32,7 @@ function IR:OptionsCallback()
 	E.Options.args.IringUI.args.misc = ACH:Group("기타 설정", nil, 2, "tab")
 	local misc = E.Options.args.IringUI.args.misc.args
 
-	-- 게임 메뉴 탭 (여기에 직접 작성)
+	-- 게임 메뉴 탭 (직접 작성으로 주입 실패 방지)
 	misc.gamemenu = ACH:Group("게임 메뉴", nil, 1)
 	misc.gamemenu.args.enable = ACH:Toggle("게임 메뉴 스타일 활성화", "ESC 메뉴에 IringUI 스킨을 적용합니다.", 1, nil, nil, nil,
 		function() return E.db.IringUI.misc and E.db.IringUI.misc.gameMenu end,
