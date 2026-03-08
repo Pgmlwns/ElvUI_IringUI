@@ -1,19 +1,19 @@
-## Interface: 50400
-## Title: |cff1784d1ElvUI|r |cff00c0faIringUI|r
+## Interface: 110007, 110100
 ## Author: Iring
-## Version: 1.0
+## Version: 1.0.1
+## Title: |cffff69b4Iring|rUI
 ## RequiredDeps: ElvUI
+## DefaultState: Enabled
+## SavedVariables: IringUIDB
+## SavedVariablesPerCharacter: IringUIDBPC
 
-Init.lua
+init.lua
 Config\Core.lua
+Install.lua
 Modules\Misc\GameMenu.lua
 Options.lua
 Styling.lua
-Modules\Misc\GameMenu.lua
 Media.lua
-
-
-
 Layout.lua
 Install.lua
 
