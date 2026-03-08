@@ -1,9 +1,18 @@
-local addon, Engine = ...
-local IR, F, E, L, V, P, G = unpack(Engine)
+function IR:Initialize()
+	-- DB 로드
+	self.db = E.db.IringUI or P.IringUI
 
-P["IringUI"] = {
-    ["install_complete"] = nil,
-    ["skin"] = { ["enable"] = true, ["stripes"] = true, ["shadow"] = true },
-    ["layout"] = { ["topBar"] = true, ["topBarHeight"] = 22 },
-    ["misc"] = { ["gameMenu"] = true },
-}
+	-- [추가] 등록된 모든 하위 모듈(GameMenu 등)의 Initialize 호출
+	for _, moduleName in ipairs(self.modules) do
+		local module = self:GetModule(moduleName)
+		if module and module.Initialize then
+			module:Initialize()
+		end
+	end
+
+	if self.InterceptInstaller then self:InterceptInstaller() end
+	if self.ForceMediaUpdate then self:ForceMediaUpdate() end
+	
+	-- 옵션 등록
+	E.Libs.EP:RegisterPlugin(addon, self.OptionsCallback)
+end
