@@ -11,22 +11,21 @@ local function ForceIringTexture()
 	local f = _G.PluginInstallFrame
 	if not f then return end
 
-	-- 1. 메인 본체(f)에 직접 무늬 텍스처 생성 (backdrop이 아님!)
 	if not f.IringStripes then
-		local tex = f:CreateTexture(nil, "BACKGROUND", nil, 1) -- 가장 낮은 레이어
+		local tex = f:CreateTexture(nil, "BACKGROUND", nil, 1)
 		tex:SetInside(f, 1, -1)
 		tex:SetTexture(IR.Media.Stripes, true, true)
 		tex:SetHorizTile(true)
 		tex:SetVertTile(true)
 		tex:SetBlendMode("ADD")
-		tex:SetAlpha(0.4) -- 빗살무늬 농도 조절
+		tex:SetAlpha(0.6) -- 설치창 무늬 농도를 0.4에서 0.6으로 상향
 		f.IringStripes = tex
 	end
 
-	-- 2. ElvUI 배경(backdrop)을 아주 어둡게 고정하여 무늬가 잘 보이게 함
 	if f.backdrop then
-		f.backdrop:SetBackdropColor(0.06, 0.06, 0.06, 0.8) -- 진한 배경색 강제 지정
-		f.backdrop:SetAlpha(1) -- 흐려진 화면 복구
+		-- 배경을 아주 어둡고 불투명하게 (0.06, 0.06, 0.06은 거의 검은색)
+		f.backdrop:SetBackdropColor(0.05, 0.05, 0.05, 0.9) -- 투명도를 0.9로 높여 묵직하게 만듦
+		f.backdrop:SetAlpha(1)
 	end
     
 	-- 3. 제목 표시줄(Title) 처리
