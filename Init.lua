@@ -1,18 +1,17 @@
 local E, L, V, P, G = unpack(ElvUI)
 local addon, Engine = ...
 
--- IR: 메인모듈, F: 유틸리티 함수 저장소
 local IR = E:NewModule(addon, 'AceConsole-3.0', 'AceEvent-3.0', 'AceHook-3.0', 'AceTimer-3.0')
 local F = {}
 
--- 전역 DB 초기화
+-- 프로필 기본값
 P["IringUI"] = {
-    ["install_complete"] = nil,
-    ["skin"] = { ["enable"] = true, ["stripes"] = true, ["shadow"] = true },
-    ["layout"] = { ["topBar"] = true, ["topBarHeight"] = 22 },
+	["install_complete"] = nil,
+	["skin"] = { ["enable"] = true, ["stripes"] = true, ["shadow"] = true },
+	["layout"] = { ["topBar"] = true, ["topBarHeight"] = 22 },
 }
 
--- [중요] 보따리 구성 순서 (IR, F, E, L, V, P, G)
+-- [순서 고정] IR, F, E, L, V, P, G
 Engine[1] = IR
 Engine[2] = F
 Engine[3] = E
@@ -25,10 +24,10 @@ _G[addon] = Engine
 IR.Title = "|cffff69b4Iring|r|cffb2b2b2UI|r"
 
 function IR:Initialize()
-    if self.InterceptInstaller then self:InterceptInstaller() end
-    if self.ForceMediaUpdate then self:ForceMediaUpdate() end
-    E.Libs.EP:RegisterPlugin(addon, self.OptionsCallback)
-    print(self.Title .. " 로드 완료!")
+	if self.InterceptInstaller then self:InterceptInstaller() end
+	if self.ForceMediaUpdate then self:ForceMediaUpdate() end
+	E.Libs.EP:RegisterPlugin(addon, self.OptionsCallback)
+	print(self.Title .. " 로드 완료!")
 end
 
 E:RegisterModule(IR:GetName())
