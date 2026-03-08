@@ -6,17 +6,17 @@ local function InstallComplete()
 	_G.ReloadUI()
 end
 
--- 스타일 적용 함수 (F 보따리 함수 사용으로 에러 방지)
 local function StyleInstallFrame()
 	local f = _G.PluginInstallFrame
 	if not f then return end
 
-	-- 엘브 기본 배경 제거 및 스타일 적용
+	-- 1. 메인 배경 처리: 지우고 -> 다시 칠하고 -> 무늬 입히기
 	if f.backdrop then
 		F.StripFrame(f.backdrop, true)
 		F.Styling(f.backdrop)
 	end
 
+	-- 2. 본체 및 제목 표시줄 처리
 	F.StripFrame(f, true)
 	F.Styling(f)
 
