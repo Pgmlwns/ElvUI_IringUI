@@ -40,7 +40,7 @@ local function Styling(f, useStripes, useShadow)
     f.__style = 1
 end
 
--- [공용] 테두리 하이라이트 함수
+-- [수정] 테두리 하이라이트 함수 (투명도 1로 고정하여 선명하게)
 local function StyleButton(f)
     if not f or f.IringBtnStyled then return end
     
@@ -62,7 +62,7 @@ local function StyleButton(f)
     f.IringBtnStyled = true
 end
 
--- [수정] 판다리아 클래식 대응 API 주입
+-- [유지] 판다리아 클래식 대응 API 주입
 local function AddIringAPI()
     local mt = getmetatable(CreateFrame("Frame")).__index
     local bt = getmetatable(CreateFrame("Button")).__index
@@ -70,10 +70,9 @@ local function AddIringAPI()
     if not mt.Styling then mt.Styling = Styling end
     if not bt.Styling then bt.Styling = Styling end
 
-    -- 모든 배경 생성 시 자동 실행
     local function OnSetTemplate(f)
         if not f then return end
-        if f.Styling then f:Styling() end -- 기존 빗살무늬
+        if f.Styling then f:Styling() end
         
         local name = f.GetName and f:GetName()
         if f:IsObjectType("Button") or (name and name:find("Tab")) then
@@ -84,7 +83,6 @@ local function AddIringAPI()
     if mt.SetTemplate then hooksecurefunc(mt, "SetTemplate", OnSetTemplate) end
     if bt.SetTemplate then hooksecurefunc(bt, "SetTemplate", OnSetTemplate) end
 
-    -- [판다리아 대응 핵심] ElvUI S(Skins) 모듈에서 탭 처리 함수 후킹
     local S = E:GetModule('Skins')
     if S and S.HandleTab then
         hooksecurefunc(S, "HandleTab", function(_, tab)
