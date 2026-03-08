@@ -1,8 +1,27 @@
 local IR, F, E, L, V, P, G = unpack(select(2, ...))
 
--- [수정] 게임 메뉴 설정을 misc(기타) 키값으로 저장
+-- IringUI 기본 프로필 설정
 P["IringUI"] = P["IringUI"] or {}
-P["IringUI"]["skin"] = P["IringUI"]["skin"] or { ["enable"] = true, ["stripes"] = true, ["shadow"] = true }
-P["IringUI"]["layout"] = P["IringUI"]["layout"] or { ["topBar"] = true, ["bottomBar"] = true }
-P["IringUI"]["autobar"] = P["IringUI"]["autobar"] or { ["enable"] = true }
---P["IringUI"]["misc"] = P["IringUI"]["misc"] or { ["gameMenu"] = true } -- general 대신 misc 사용
+
+-- [스킨 설정]
+P["IringUI"]["skin"] = {
+	["enable"] = true,
+	["stripes"] = true,
+	["shadow"] = true,
+}
+
+-- [레이아웃 설정]
+P["IringUI"]["layout"] = {
+	["topBar"] = true,
+	["bottomBar"] = true,
+}
+
+-- [자동바 설정]
+P["IringUI"]["autobar"] = {
+	["enable"] = true,
+}
+
+-- [기타 설정] 게임 메뉴 기본값 활성화(true)
+P["IringUI"]["misc"] = {
+	["gameMenu"] = true,
+}
