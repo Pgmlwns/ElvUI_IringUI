@@ -1,6 +1,31 @@
 local IR, F, E, L, V, P, G = unpack(select(2, ...))
 local PI = E:GetModule('PluginInstaller')
 
+-- 설치창에 IringUI 전용 스타일 입히기 (꾸미기용)
+local function DecorateInstallFrame()
+    local f = _G.PluginInstallFrame
+    if not f or f.IringDecorated then return end
+
+    -- 1. 상단에 핑크색 얇은 바 추가
+    local topBar = f:CreateTexture(nil, "OVERLAY")
+    topBar:SetPoint("TOPLEFT", f, "TOPLEFT", 5, -5)
+    topBar:SetPoint("TOPRIGHT", f, "TOPRIGHT", -5, -5)
+    topBar:SetHeight(3)
+    topBar:SetColorTexture(1, 0.41, 0.7, 0.8) -- 영롱한 핑크색
+
+    -- 2. 설치창 전체에 IringUI 스타일(빗살무늬) 입히기
+    if f.Styling then 
+        f:Styling() 
+    end
+
+    f.IringDecorated = true
+end
+
+-- 설치창이 열릴 때마다 꾸미기 실행
+hooksecurefunc(PI, "Queue", function()
+    E:Delay(0.01, DecorateInstallFrame)
+end)
+
 -- 설치 완료 시 실행될 함수
 local function InstallComplete()
 	E.db.IringUI.install_complete = E.version
