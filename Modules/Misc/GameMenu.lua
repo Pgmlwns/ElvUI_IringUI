@@ -1,7 +1,7 @@
 local addon, Engine = ...
 local IR, F, E, L, V, P, G = unpack(Engine)
 
--- [모듈 독립 설정] 코어 파일을 수정하지 않고 여기서 직접 주입합니다.
+-- [독립 설정] 코어 파일을 수정하지 않고 여기서 직접 기본값 주입
 P["IringUI"]["misc"] = P["IringUI"]["misc"] or {}
 if P["IringUI"]["misc"]["gameMenu"] == nil then
     P["IringUI"]["misc"]["gameMenu"] = true
@@ -28,7 +28,6 @@ local function CreateMenuPanel(name, point)
     else
         frame:SetPoint("BOTTOM", E.UIParent, "BOTTOM", 0, -1)
     end
-    
     return frame
 end
 
@@ -51,7 +50,6 @@ end
 
 function module:Initialize()
     _G.GameMenuFrame:HookScript("OnShow", function()
-        -- DB에 설정이 있을 때만 실행
         if E.db.IringUI.misc and E.db.IringUI.misc.gameMenu then
             module:SetupGameMenu()
             _G.GameMenuFrame.IRtopPanel:Show()
