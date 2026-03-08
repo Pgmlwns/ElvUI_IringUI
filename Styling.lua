@@ -1,52 +1,67 @@
 local IR, F, E, L, V, P, G = unpack(select(2, ...))
 
--- 1. 스타일링 핵심 함수 (덧붙이기 방식)
-F.Styling = function(f, useStripes, useShadow)
-	-- 설정값 체크 (에러 방지)
-	local db = E.db and E.db.IringUI
-	if not db or not db.skin.enable then return end
-	if not f or f.IRstyle then return end
+-- 스타일링 핵심 함수 (메라실리스 로직 이식)
+local function Styling(f, useStripes, useShadow)
+	-- 설정 체크
+	if not E.db or not E.db.IringUI or not E.db.IringUI.skin.enable then return end
+	if not f or f.IRstyle or f.__style then return end
 
-	-- 스타일을 담을 프레임 생성
-	local style = CreateFrame("Frame", nil, f, "BackdropTemplate")
-	style:SetAllPoints(f)
-	style:SetFrameLevel(f:GetFrameLevel() + 1) -- 부모보다 살짝 위로
+	-- 텍스처인 경우 부모 프레임으로 대상 변경
+	if f:GetObjectType() == "Texture" then f = f:GetParent() end
 
-	-- 빗살무늬 (Stripes)
-	if db.skin.stripes and not useStripes then
-		local stripes = style:CreateTexture(nil, "OVERLAY")
-		stripes:SetInside(style, 1, -1)
+	local frameName = f.GetName and f:GetName()
+	local style = CreateFrame("Frame", frameName and frameName.."_IRStyle" or nil, f, "BackdropTemplate")
+
+	-- 빗살무늬 (Stripes) 생성 - 레이어: BORDER
+	if E.db.IringUI.skin.stripes and not useStripes then
+		local stripes = f:CreateTexture(nil, "BORDER")
+		stripes:SetInside(f, 1, -1)
 		stripes:SetTexture(IR.Media.Stripes, true, true)
 		stripes:SetHorizTile(true)
 		stripes:SetVertTile(true)
 		stripes:SetBlendMode("ADD")
-		stripes:SetAlpha(0.5) -- 너무 진하지 않게 조절
+		
+		-- 설치창(PluginInstall) 계열인 경우 레이어를 더 높게 설정 (핵심 포인트)
+		if frameName and (frameName:find("PluginInstall") or frameName:find("ElvUIInstall")) then
+			stripes:SetDrawLayer("OVERLAY", 7)
+		end
+		
 		style.stripes = stripes
 	end
 
-	-- 그림자 (Shadow)
-	if db.skin.shadow and not useShadow then
-		local mshadow = style:CreateTexture(nil, "OVERLAY")
-		mshadow:SetInside(style, 0, 0)
+	-- 그림자 (Shadow) 생성
+	if E.db.IringUI.skin.shadow and not useShadow then
+		local mshadow = f:CreateTexture(nil, "BORDER")
+		mshadow:SetInside(f, 0, 0)
 		mshadow:SetTexture(IR.Media.Overlay)
 		mshadow:SetVertexColor(1, 1, 1, 0.6)
 		style.mshadow = mshadow
 	end
+
+	style:SetFrameStrata(f:GetFrameStrata())
+	style:SetFrameLevel(f:GetFrameLevel() + 1)
+	style:SetAllPoints(f)
 	
 	f.IRstyle = style
+	f.__style = 1
 end
 
--- 2. 모든 프레임 설계도에 기능 주입
+-- 메라실리스 방식의 API 주입 (Metatable 직접 공략)
 local function AddIringAPI()
 	local frame = CreateFrame("Frame")
 	local mt = getmetatable(frame).__index
-	if not mt.Styling then mt.Styling = F.Styling end
+	
+	-- 모든 프레임에서 .Styling() 사용 가능하게 함
+	if not mt.Styling then mt.Styling = Styling end
 
-	-- ElvUI가 배경을 만들 때마다 자동 호출
+	-- [결정적 차이] ElvUI의 배경 생성 함수를 메타테이블 수준에서 후킹
 	if mt.SetTemplate then
 		hooksecurefunc(mt, "SetTemplate", function(f)
-			if f and f.Styling then f:Styling() end
+			if f and f.Styling then
+				f:Styling()
+			end
 		end)
 	end
 end
+
 AddIringAPI()
