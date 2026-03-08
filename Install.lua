@@ -6,28 +6,26 @@ local function InstallComplete()
 	_G.ReloadUI()
 end
 
+-- [안전 해결] 설치창 배경을 찾아서 스타일 강제 주입
 local function StyleInstallFrame()
 	local f = _G.PluginInstallFrame
 	if not f then return end
 
-	-- 1. 메인 배경 처리: 지우고 -> 다시 칠하고 -> 무늬 입히기
+	-- 1. 메인 배경(backdrop)에 스타일 입히기
 	if f.backdrop then
-		F.StripFrame(f.backdrop, true)
+		f.backdrop:SetTemplate("Transparent") -- 배경색 먼저 살리기
 		F.Styling(f.backdrop)
 	end
 
-	-- 2. 본체 및 제목 표시줄 처리
-	F.StripFrame(f, true)
-	F.Styling(f)
-
+	-- 2. 제목 프레임 처리
 	local title = _G.PluginInstallTitleFrame
-	if title then
-		F.StripFrame(title, true)
-		F.Styling(title)
+	if title and title.backdrop then
+		title.backdrop:SetTemplate("Transparent")
+		F.Styling(title.backdrop)
 	end
 end
 
--- [이후 인스톨 테이블 및 가로채기 로직은 동일하게 유지하되 함수 호출만 변경]
+-- [이하 가로채기 및 테이블 로직]
 function IR:InterceptInstaller()
 	if _G.ElvUIInstallFrame then _G.ElvUIInstallFrame:Hide() end
 	E.Install = function() 
@@ -56,7 +54,6 @@ IR.installTable = {
 		[2] = function()
 			if not _G.PluginInstallFrame then return end
 			_G.PluginInstallFrame.SubTitle:SetText("레이아웃")
-			_G.PluginInstallFrame.Desc1:SetText("스타일을 적용합니다.")
 			_G.PluginInstallFrame.Option1:Show()
 			_G.PluginInstallFrame.Option1:SetText("스타일 적용")
 			_G.PluginInstallFrame.Option1:SetScript("OnClick", function() 
