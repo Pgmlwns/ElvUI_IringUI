@@ -1,53 +1,47 @@
 local E, L, V, P, G = unpack(ElvUI)
 local addon, Engine = ...
 
--- 1. 메인 객체 IR 생성
 local IR = E:NewModule("IringUI", 'AceConsole-3.0', 'AceEvent-3.0', 'AceHook-3.0', 'AceTimer-3.0')
 local F = {}
 
--- 2. 기본 정보 선언 (다른 파일 nil 에러 방지용)
 IR.Title = "|cffff69b4Iring|r|cffb2b2b2UI|r"
 IR.Media = {
-	["Stripes"] = [[Interface\AddOns\ElvUI_IringUI\Media\Textures\mUI1.tga]],
+    ["Stripes"] = [[Interface\AddOns\ElvUI_IringUI\Media\Textures\mUI1.tga]],
 }
 
--- 3. 보따리 채우기 (순서 고정: IR, F, E, L, V, P, G)
-Engine[1], Engine[2], Engine[3], Engine[4], Engine[5], Engine[6], Engine[7] = IR, F, E, L, V, P, G
+Engine, Engine, Engine, Engine, Engine, Engine, Engine = IR, F, E, L, V, P, G
 _G[addon] = Engine
 
--- 공통 스타일 함수 (빗살무늬 용)
+-- 공통 스타일 함수
 function IR:ApplyStyle(frame)
-	if not frame or frame.IringStripes then return end
-	local db = E.db.IringUI
-	if not db or not db.skin or not db.skin.stripes then return end
+    if not frame or frame.IringStripes then return end
+    local db = E.db.IringUI
+    if not db or not db.skin or not db.skin.stripes then return end
 
-	local stripes = frame:CreateTexture(nil, "OVERLAY", nil, 6)
-	stripes:SetInside(frame, 1, -1)
-	stripes:SetTexture(IR.Media.Stripes, true, true)
-	stripes:SetHorizTile(true) stripes:SetVertTile(true)
-	stripes:SetBlendMode("ADD") stripes:SetAlpha(0.35)
-	frame.IringStripes = stripes
+    local stripes = frame:CreateTexture(nil, "OVERLAY", nil, 6)
+    stripes:SetInside(frame, 1, -1)
+    stripes:SetTexture(IR.Media.Stripes, true, true)
+    stripes:SetHorizTile(true) stripes:SetVertTile(true)
+    stripes:SetBlendMode("ADD") stripes:SetAlpha(0.35)
+    frame.IringStripes = stripes
 end
 
--- [핵심] 모듈 초기화 함수
 function IR:Initialize()
-	-- 사용자 설정값 참조
-	self.db = E.db.IringUI or P.IringUI
-	
-	-- [추가] 등록된 모든 하위 모듈(IR_GameMenu 등) 자동 실행 조건
-	-- 이 루프가 있어야 GameMenu.lua의 Initialize가 자동으로 호출됩니다.
-	if self.modules then
-		for _, moduleName in ipairs(self.modules) do
-			local m = self:GetModule(moduleName)
-			if m and m.Initialize then
-				m:Initialize()
-			end
-		end
-	end
+    self.db = E.db.IringUI or P.IringUI
+    
+    -- [수정] 등록된 모든 하위 모듈(IR_GameMenu 등)을 수동으로 순회하며 초기화
+    if self.modules then
+        for name, module in self:IterateModules() do
+            if module.Initialize then
+                module:Initialize()
+            end
+        end
+    end
 
-	-- 설치창 호출 로직
-	if self.InterceptInstaller then self:InterceptInstaller() end
+    if self.InterceptInstaller then self:InterceptInstaller() end
+    if self.OptionsCallback then
+        E.Libs.EP:RegisterPlugin(addon, function() IR:OptionsCallback() end)
+    end
 end
 
--- ElvUI 모듈 시스템에 최종 등록
 E:RegisterModule(IR:GetName())
