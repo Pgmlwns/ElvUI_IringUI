@@ -1,4 +1,4 @@
-local addon, Engine = ...
+local addon, Engine = unpack(select(2, ...)) -- 수정된 선언 방식
 local IR, F, E, L, V, P, G = unpack(Engine)
 
 -- [안전 장치] 설정값 주입
@@ -39,28 +39,37 @@ function module:SetupGameMenu()
     local GameMenuFrame = _G["GameMenuFrame"]
     if not GameMenuFrame or GameMenuFrame.IRtopPanel then return end
 
+    -- 상단 패널
     GameMenuFrame.IRtopPanel = CreateMenuPanel("IR_TopPanel", "TOP")
     local t1 = GameMenuFrame.IRtopPanel:CreateTexture(nil, "OVERLAY")
     t1:SetPoint("CENTER") t1:SetSize(180, 180)
     t1:SetTexture(classBannerPath .. E.myclass)
 
+    -- 하단 패널
     GameMenuFrame.IRbottomPanel = CreateMenuPanel("IR_BottomPanel", "BOTTOM")
     local t2 = GameMenuFrame.IRbottomPanel:CreateTexture(nil, "OVERLAY")
     t2:SetPoint("CENTER") t2:SetSize(140, 140)
     t2:SetTexture(logoTexture)
 end
 
+-- [핵심] Initialize와 상관없이 프레임이 보일 때 무조건 실행되도록 전역 후킹
+local function OnGameMenuShow()
+    if E.db.IringUI and E.db.IringUI.misc and E.db.IringUI.misc.gameMenu then
+        module:SetupGameMenu()
+        if _G.GameMenuFrame.IRtopPanel then _G.GameMenuFrame.IRtopPanel:Show() end
+        if _G.GameMenuFrame.IRbottomPanel then _G.GameMenuFrame.IRbottomPanel:Show() end
+    end
+end
+
+-- Initialize 함수
 function module:Initialize()
-    -- [보강] 게임 메뉴가 로드될 때 확실히 실행되도록 HookScript 사용
     if _G.GameMenuFrame then
-        _G.GameMenuFrame:HookScript("OnShow", function()
-            -- DB 설정이 true이거나, 설정값이 아직 없을 때(기본값) 실행
-            local db = E.db.IringUI
-            if not db or not db.misc or db.misc.gameMenu ~= false then
-                module:SetupGameMenu()
-                -- 생성 후 명시적으로 Show (수동 명령어 로직과 동일하게)
-                if _G.GameMenuFrame.IRtopPanel then _G.GameMenuFrame.IRtopPanel:Show() end
-                if _G.GameMenuFrame.IRbottomPanel then _G.GameMenuFrame.IRbottomPanel:Show() end
+        _G.GameMenuFrame:HookScript("OnShow", OnGameMenuShow)
+    else
+        -- 혹시라도 GameMenuFrame이 아직 없다면 생성될 때까지 대기
+        self:RegisterEvent("PLAYER_ENTERING_WORLD", function()
+            if _G.GameMenuFrame then
+                _G.GameMenuFrame:HookScript("OnShow", OnGameMenuShow)
             end
         end)
     end
