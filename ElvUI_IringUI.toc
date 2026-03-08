@@ -1,0 +1,15 @@
+## Interface: 50400
+## Title: |cff1784d1ElvUI|r |cffff69b4Iring|r|cffb2b2b2UI|r
+## Notes: Professional Layout Plugin for MoP Classic
+## RequiredDeps: ElvUI
+## Author: Iring
+## Version: 1.0.0
+## SavedVariables: IringDB
+## SavedVariablesPerCharacter: IringCharacterDB
+
+Init.lua
+Media.lua
+Styling.lua
+Layout.lua
+Options.lua
+Install.lua
