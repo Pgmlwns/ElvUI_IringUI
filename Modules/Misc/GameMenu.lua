@@ -1,15 +1,17 @@
-local addon, Engine = unpack(select(2, ...)) -- 수정된 선언 방식
+local addon, Engine = ...
 local IR, F, E, L, V, P, G = unpack(Engine)
 
--- [안전 장치] 설정값 주입
-P["IringUI"] = P["IringUI"] or {}
-P["IringUI"]["misc"] = P["IringUI"]["misc"] or {}
-if P["IringUI"]["misc"]["gameMenu"] == nil then P["IringUI"]["misc"]["gameMenu"] = true end
+-- [에러 해결] P가 nil이거나 IringUI 그릇이 없을 때 즉석 생성 (5번 줄 에러 방지)
+if P then
+    P["IringUI"] = P["IringUI"] or {}
+    P["IringUI"]["misc"] = P["IringUI"]["misc"] or {}
+    if P["IringUI"]["misc"]["gameMenu"] == nil then P["IringUI"]["misc"]["gameMenu"] = true end
+end
 
 local module = IR:NewModule('IR_GameMenu', 'AceEvent-3.0')
 local _G = _G
 
--- 디버깅 및 수동 호출용 전역 변수 유지
+-- 수동 디버깅용 전역 변수 유지
 _G["IR_GM"] = module 
 
 local logoTexture = [[Interface\AddOns\ElvUI_IringUI\Media\Textures\mUI1.tga]]
@@ -50,26 +52,17 @@ function module:SetupGameMenu()
     local t2 = GameMenuFrame.IRbottomPanel:CreateTexture(nil, "OVERLAY")
     t2:SetPoint("CENTER") t2:SetSize(140, 140)
     t2:SetTexture(logoTexture)
+    
+    if _G.GameMenuFrame.IRtopPanel then _G.GameMenuFrame.IRtopPanel:Show() end
+    if _G.GameMenuFrame.IRbottomPanel then _G.GameMenuFrame.IRbottomPanel:Show() end
 end
 
--- [핵심] Initialize와 상관없이 프레임이 보일 때 무조건 실행되도록 전역 후킹
-local function OnGameMenuShow()
-    if E.db.IringUI and E.db.IringUI.misc and E.db.IringUI.misc.gameMenu then
-        module:SetupGameMenu()
-        if _G.GameMenuFrame.IRtopPanel then _G.GameMenuFrame.IRtopPanel:Show() end
-        if _G.GameMenuFrame.IRbottomPanel then _G.GameMenuFrame.IRbottomPanel:Show() end
-    end
-end
-
--- Initialize 함수
 function module:Initialize()
+    -- 게임 메뉴가 보일 때마다 실행 여부 체크
     if _G.GameMenuFrame then
-        _G.GameMenuFrame:HookScript("OnShow", OnGameMenuShow)
-    else
-        -- 혹시라도 GameMenuFrame이 아직 없다면 생성될 때까지 대기
-        self:RegisterEvent("PLAYER_ENTERING_WORLD", function()
-            if _G.GameMenuFrame then
-                _G.GameMenuFrame:HookScript("OnShow", OnGameMenuShow)
+        _G.GameMenuFrame:HookScript("OnShow", function()
+            if E.db.IringUI and E.db.IringUI.misc and E.db.IringUI.misc.gameMenu then
+                module:SetupGameMenu()
             end
         end)
     end
