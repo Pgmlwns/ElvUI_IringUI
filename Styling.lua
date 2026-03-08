@@ -1,67 +1,40 @@
 local IR, F, E, L, V, P, G = unpack(select(2, ...))
 
--- 스타일링 핵심 함수 (메라실리스 로직 이식)
-local function Styling(f, useStripes, useShadow)
-	-- 설정 체크
+-- 스타일링 핵심 함수
+local function Styling(f)
 	if not E.db or not E.db.IringUI or not E.db.IringUI.skin.enable then return end
-	if not f or f.IRstyle or f.__style then return end
+	if not f or f.IRstyle then return end
 
-	-- 텍스처인 경우 부모 프레임으로 대상 변경
-	if f:GetObjectType() == "Texture" then f = f:GetParent() end
+	-- 스타일 프레임 생성
+	local style = CreateFrame("Frame", nil, f, "BackdropTemplate")
+	style:SetAllPoints(f)
+	style:SetFrameLevel(f:GetFrameLevel() + 1)
 
-	local frameName = f.GetName and f:GetName()
-	local style = CreateFrame("Frame", frameName and frameName.."_IRStyle" or nil, f, "BackdropTemplate")
-
-	-- 빗살무늬 (Stripes) 생성 - 레이어: BORDER
-	if E.db.IringUI.skin.stripes and not useStripes then
-		local stripes = f:CreateTexture(nil, "BORDER")
-		stripes:SetInside(f, 1, -1)
+	-- 빗살무늬 (Stripes) - 레이어를 높여서 배경색에 묻히지 않게 함
+	if E.db.IringUI.skin.stripes then
+		local stripes = style:CreateTexture(nil, "OVERLAY", nil, 7)
+		stripes:SetInside(style, 1, -1)
 		stripes:SetTexture(IR.Media.Stripes, true, true)
 		stripes:SetHorizTile(true)
 		stripes:SetVertTile(true)
 		stripes:SetBlendMode("ADD")
-		
-		-- 설치창(PluginInstall) 계열인 경우 레이어를 더 높게 설정 (핵심 포인트)
-		if frameName and (frameName:find("PluginInstall") or frameName:find("ElvUIInstall")) then
-			stripes:SetDrawLayer("OVERLAY", 7)
-		end
-		
+		stripes:SetAlpha(0.5)
 		style.stripes = stripes
 	end
 
-	-- 그림자 (Shadow) 생성
-	if E.db.IringUI.skin.shadow and not useShadow then
-		local mshadow = f:CreateTexture(nil, "BORDER")
-		mshadow:SetInside(f, 0, 0)
-		mshadow:SetTexture(IR.Media.Overlay)
-		mshadow:SetVertexColor(1, 1, 1, 0.6)
-		style.mshadow = mshadow
-	end
-
-	style:SetFrameStrata(f:GetFrameStrata())
-	style:SetFrameLevel(f:GetFrameLevel() + 1)
-	style:SetAllPoints(f)
-	
 	f.IRstyle = style
-	f.__style = 1
 end
 
--- 메라실리스 방식의 API 주입 (Metatable 직접 공략)
+-- [핵심] 모든 프레임 설계도에 API 주입
 local function AddIringAPI()
-	local frame = CreateFrame("Frame")
-	local mt = getmetatable(frame).__index
-	
-	-- 모든 프레임에서 .Styling() 사용 가능하게 함
+	local mt = getmetatable(CreateFrame("Frame")).__index
 	if not mt.Styling then mt.Styling = Styling end
 
-	-- [결정적 차이] ElvUI의 배경 생성 함수를 메타테이블 수준에서 후킹
+	-- ElvUI가 배경을 칠하는 모든 순간을 감시
 	if mt.SetTemplate then
 		hooksecurefunc(mt, "SetTemplate", function(f)
-			if f and f.Styling then
-				f:Styling()
-			end
+			if f and f.Styling then f:Styling() end
 		end)
 	end
 end
-
 AddIringAPI()
