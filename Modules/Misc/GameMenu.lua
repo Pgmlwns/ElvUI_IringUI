@@ -1,6 +1,10 @@
 local IR, F, E, L, V, P, G = unpack(select(2, ...))
 local GM = E:NewModule('IringUI_GameMenu', 'AceHook-3.0')
 
+IR.ModuleFilters["GameMenu"] = function()
+    return E.db.IringUI.misc and E.db.IringUI.misc.gameMenu
+end
+
 -- 스타일 적용 기능
 function GM:StyleGameMenu()
 	-- 설정 체크 (Core.lua의 misc.gameMenu 참조)
