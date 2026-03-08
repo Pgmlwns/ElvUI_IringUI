@@ -1,7 +1,7 @@
 -- 순서: IR, F, E, L, V, P, G
 local IR, F, E, L, V, P, G = unpack(select(2, ...))
 
--- [건드리지 않음] 기존 빗살무늬 및 그림자 로직
+-- [원본 유지] 빗살무늬 및 그림자 로직 (절대 수정 금지)
 local function Styling(f, useStripes, useShadow)
     if not E.db or not E.db.IringUI or not E.db.IringUI.skin.enable then return end
     if not f or f.IRstyle or f.__style then return end
@@ -40,23 +40,23 @@ local function Styling(f, useStripes, useShadow)
     f.__style = 1
 end
 
--- [공용] 모든 버튼/탭 테두리 하이라이트 함수
+-- [보강] 모든 버튼 및 탭 테두리 하이라이트 적용 함수
 local function StyleButton(f)
     if not f or f.IringBtnStyled then return end
     
-    -- 마우스 올렸을 때
+    -- 마우스 진입 시 직업 색상 테두리
     f:HookScript("OnEnter", function(self)
         local color = RAID_CLASS_COLORS[E.myclass]
-        local target = self.backdrop or self
-        if target.SetBackdropBorderColor then
-            target:SetBackdropBorderColor(color.r, color.g, color.b)
+        local target = self.backdrop or (self.GetBackdrop and self)
+        if target and target.SetBackdropBorderColor then
+            target:SetBackdropBorderColor(color.r, color.g, color.b, 1)
         end
     end)
     
-    -- 마우스 뗐을 때
+    -- 마우스 탈출 시 원래 색상으로
     f:HookScript("OnLeave", function(self)
-        local target = self.backdrop or self
-        if target.SetBackdropBorderColor then
+        local target = self.backdrop or (self.GetBackdrop and self)
+        if target and target.SetBackdropBorderColor then
             target:SetBackdropBorderColor(unpack(E.media.bordercolor))
         end
     end)
@@ -64,7 +64,7 @@ local function StyleButton(f)
     f.IringBtnStyled = true
 end
 
--- [수정] API 주입 및 공용 후킹
+-- [최종 수정] API 주입 및 모든 탭/버튼 감시 로직
 local function AddIringAPI()
     local mt = getmetatable(CreateFrame("Frame")).__index
     local bt = getmetatable(CreateFrame("Button")).__index
@@ -72,26 +72,28 @@ local function AddIringAPI()
     if not mt.Styling then mt.Styling = Styling end
     if not bt.Styling then bt.Styling = Styling end
 
-    -- 엘브유아이의 모든 배경 생성 함수(SetTemplate)에 스타일 로직 연결
-    local function UniversalHook(f)
+    -- 엘브가 배경을 입힐 때(SetTemplate) 실행되는 공용 함수
+    local function OnSetTemplate(f)
         if not f then return end
         
-        -- 1. 기존 빗살무늬 적용
+        -- 1. 기존 빗살무늬 적용 (Styling 호출)
         if f.Styling then f:Styling() end
         
-        -- 2. 버튼이거나 탭(Tab) 이름을 가진 프레임이면 테두리 하이라이트 적용
+        -- 2. 버튼이거나 이름에 'Tab'이 포함된 프레임이면 테두리 적용
         local name = f.GetName and f:GetName()
-        if f:IsObjectType("Button") or (name and name:find("Tab")) then
+        if f:IsObjectType("Button") or (name and (name:find("Tab") or name:find("Button"))) then
             StyleButton(f)
         end
     end
 
-    if mt.SetTemplate then
-        hooksecurefunc(mt, "SetTemplate", UniversalHook)
-    end
-    if bt.SetTemplate then
-        hooksecurefunc(bt, "SetTemplate", UniversalHook)
-    end
+    -- Hook 적용
+    if mt.SetTemplate then hooksecurefunc(mt, "SetTemplate", OnSetTemplate) end
+    if bt.SetTemplate then hooksecurefunc(bt, "SetTemplate", OnSetTemplate) end
+    
+    -- 추가 조치: 엘브가 기본적으로 스타일링하는 탭들에 강제로 입힘
+    hooksecurefunc(E, "ReskinTab", function(_, tab)
+        if tab then StyleButton(tab) end
+    end)
 end
 
 AddIringAPI()
