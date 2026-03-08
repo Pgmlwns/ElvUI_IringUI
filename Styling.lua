@@ -1,98 +1,74 @@
-local IR, F, E, L, V, P, G = unpack(select(2, ...))
-
-IR.Styling = {}
-
--- [1] 모든 프레임 및 버튼에 빗살무늬와 그림자를 입히는 함수
-local function Styling(f, useStripes, useShadow)
-	-- 설정 체크
-	if not E.db or not E.db.IringUI or not E.db.IringUI.skin.enable then return end
-	if not f or f.IRstyle or f.__style then return end
-
-	if f:GetObjectType() == "Texture" then f = f:GetParent() end
-
-	local frameName = f.GetName and f:GetName()
-	local style = CreateFrame("Frame", frameName and frameName.."_IRStyle" or nil, f, "BackdropTemplate")
-
-	-- 빗살무늬 (Stripes)
-	if E.db.IringUI.skin.stripes and not useStripes then
-		local stripes = f:CreateTexture(nil, "BORDER")
-		stripes:SetInside(f, 1, -1)
-		stripes:SetTexture(IR.Media.Stripes, true, true)
-		stripes:SetHorizTile(true)
-		stripes:SetVertTile(true)
-		stripes:SetBlendMode("ADD")
-		
-		-- 설치창 레이어 처리
-		if frameName and (frameName:find("PluginInstall") or frameName:find("ElvUIInstall")) then
-			stripes:SetDrawLayer("OVERLAY", 7)
-		end
-		style.stripes = stripes
-	end
-
-	-- 그림자 (Shadow) - 직업 색상 0.4 투명도
-	if E.db.IringUI.skin.shadow and not useShadow then
-		local mshadow = f:CreateTexture(nil, "BORDER")
-		mshadow:SetInside(f, 0, 0)
-		mshadow:SetTexture(IR.Media.Overlay)
-		
-		local color = RAID_CLASS_COLORS[E.myclass]
-		mshadow:SetVertexColor(color.r, color.g, color.b)
-		mshadow:SetAlpha(0.4)
-		style.mshadow = mshadow
-	end
-
-	style:SetFrameStrata(f:GetFrameStrata())
-	style:SetFrameLevel(f:GetFrameLevel() + 1)
-	style:SetAllPoints(f)
-	
-	f.IRstyle = style
-	f.__style = 1
-end
-
--- [2] 버튼 전용 테두리 하이라이트 함수
 local function StyleButton(f)
 	if not f or f.IringBtnStyled then return end
 
+	-- 마우스 진입 시 (발광 및 테두리)
 	f:HookScript("OnEnter", function(self)
 		local color = RAID_CLASS_COLORS[E.myclass]
-		local target = self.backdrop or self
-		if target.SetBackdropBorderColor then
-			target:SetBackdropBorderColor(color.r, color.g, color.b)
+		-- ElvUI 버튼은 보통 .backdrop에 테두리가 있습니다.
+		local target = self.backdrop or (self.GetBackdrop and self)
+		
+		if target and target.SetBackdropBorderColor then
+			target:SetBackdropBorderColor(color.r, color.g, color.b, 1) -- 직업색상 테두리
 		end
+		
+		-- [선택] 아주 약한 발광 효과 추가 (필요 없으면 이 블록 삭제)
+		if self.SetAlpha then self:SetAlpha(0.8) end 
 	end)
 
+	-- 마우스 나갈 때 (원래대로)
 	f:HookScript("OnLeave", function(self)
-		local target = self.backdrop or self
-		if target.SetBackdropBorderColor then
+		local target = self.backdrop or (self.GetBackdrop and self)
+		if target and target.SetBackdropBorderColor then
 			target:SetBackdropBorderColor(unpack(E.media.bordercolor))
 		end
+		
+		if self.SetAlpha then self:SetAlpha(1) end
 	end)
 
 	f.IringBtnStyled = true
 end
 
--- [3] API 주입 및 엘브 후킹
+-- 캐릭터 창 하단 탭(평판, 숙련 등)을 강제로 스타일링하는 함수
+local function StyleCharacterTabs()
+	-- 캐릭터 창의 탭 개수만큼 반복 (보통 1~5번)
+	for i = 1, 5 do
+		local tab = _G["CharacterFrameTab"..i]
+		if tab then
+			StyleButton(tab)
+			-- 탭의 배경 프레임이 별도로 있다면 그것도 스타일링
+			if tab.backdrop then StyleButton(tab.backdrop) end
+		end
+	end
+end
+
+-- [3] API 주입 및 엘브 후킹 부분 수정
 local function AddIringAPI()
 	local frame = CreateFrame("Frame")
 	local mt = getmetatable(frame).__index
 	
-	-- :Styling() 함수 등록
 	if not mt.Styling then mt.Styling = Styling end
 
-	-- 엘브가 배경을 입힐 때(SetTemplate) 무조건 실행
 	if mt.SetTemplate then
 		hooksecurefunc(mt, "SetTemplate", function(f)
 			if not f then return end
-			
-			-- 빗살무늬 적용
 			if f.Styling then f:Styling() end
 			
-			-- 버튼이면 테두리 하이라이트 추가 적용
-			if f:IsObjectType("Button") or (f:GetParent() and f:GetParent():IsObjectType("Button")) then
+			-- 버튼이거나 이름에 'Tab'이 들어가는 경우 하이라이트 적용
+			local name = f.GetName and f:GetName()
+			if f:IsObjectType("Button") or (name and name:find("Tab")) then
 				StyleButton(f)
 			end
 		end)
 	end
+    
+	-- 캐릭터 창이 열릴 때 탭 스타일링 강제 실행
+	local eventFrame = CreateFrame("Frame")
+	eventFrame:RegisterEvent("ADDON_LOADED")
+	eventFrame:SetScript("OnEvent", function(self, event, addon)
+		if addon == "Blizzard_CharacterFrame" or addon == "ElvUI" then
+			StyleCharacterTabs()
+		end
+	end)
 end
 
 AddIringAPI()
