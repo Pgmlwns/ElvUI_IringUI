@@ -4,8 +4,13 @@ IR.Styling = {}
 
 -- 스타일링 적용 핵심 함수
 local function Styling(f, useStripes, useShadow)
+	-- [안전 장치] E.db.IringUI가 아직 생성되지 않았다면 에러 방지를 위해 중단하거나 기본값 가정
+	if not E.db or not E.db.IringUI then return end
+	
 	-- 설정에서 스킨이 꺼져있으면 작동 안 함
-	if E.db.IringUI and E.db.IringUI.skin and not E.db.IringUI.skin.enable then return end
+	if not E.db.IringUI.skin.enable then return end
+	
+	-- 이미 스타일이 적용되었거나 프레임이 없으면 중단
 	if not f or f.IRstyle or f.__style then return end
 
 	-- 텍스처인 경우 부모 프레임을 대상으로 함
@@ -53,8 +58,7 @@ local function AddStylingAPI()
 		mt.Styling = Styling
 	end
 
-	-- CreateBackdrop 함수를 낚아채서 자동으로 Styling 적용
-	-- ElvUI 엔진(E)에 없을 경우 메타테이블(mt)에서 직접 후킹
+	-- CreateBackdrop 함수 후킹 (ElvUI의 배경 생성 시점 포착)
 	if E.CreateBackdrop then
 		hooksecurefunc(E, "CreateBackdrop", function(_, frame)
 			if frame and frame.Styling then frame:Styling() end
@@ -69,8 +73,9 @@ end
 -- 시스템에 API 주입 실행
 AddStylingAPI()
 
--- 기존에 이미 생성된 프레임들에 대한 소급 적용
+-- 기존 프레임 소급 적용
 local function ApplyToExisting()
+	-- 이 시점에는 이미 Initialize가 끝났으므로 E.db.IringUI가 확실히 존재함
 	local frames = {
 		_G["LeftChatPanel"], _G["RightChatPanel"], _G["MinimapPanel"], 
 		_G["ElvUI_Bar1"], _G["ElvUI_Bar2"], _G["ElvUI_Bar3"], 
