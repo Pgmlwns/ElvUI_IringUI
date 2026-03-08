@@ -9,7 +9,6 @@
 
 init.lua
 Config\Core.lua
-Install.lua
 Modules\Misc\GameMenu.lua
 Options.lua
 Styling.lua
