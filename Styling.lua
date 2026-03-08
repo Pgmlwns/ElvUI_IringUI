@@ -1,13 +1,29 @@
 local IR, F, E, L, V, P, G = unpack(select(2, ...))
 
-IR.Styling = {}
+-- 1. 기존 프레임의 찌꺼기(블리자드/엘브 기본 배경)를 지우는 함수
+local function StripFrame(f, kill, alpha)
+	if not f then return end
+	if f.GetNumRegions then
+		for i = 1, f:GetNumRegions() do
+			local region = select(i, f:GetRegions())
+			if region and region:IsObjectType("Texture") then
+				if kill then
+					region:Hide()
+					region.Show = function() end -- 다시는 나타나지 못하게 함
+				elseif alpha then
+					region:SetAlpha(0)
+				else
+					region:SetTexture(nil)
+				end
+			end
+		end
+	end
+end
 
--- 스타일링 적용 핵심 함수
+-- 2. IringUI 전용 스타일(빗살무늬/그림자)을 입히는 함수
 local function Styling(f, useStripes, useShadow)
 	if not E.db or not E.db.IringUI or not E.db.IringUI.skin.enable then return end
 	if not f or f.IRstyle or f.__style then return end
-
-	if f:GetObjectType() == "Texture" then f = f:GetParent() end
 
 	local frameName = f.GetName and f:GetName()
 	local style = CreateFrame("Frame", frameName and frameName.."_IRStyle" or nil, f, "BackdropTemplate")
@@ -38,55 +54,22 @@ local function Styling(f, useStripes, useShadow)
 	
 	f.IRstyle = style
 	f.__style = 1
-	IR.Styling[style] = true
 end
 
--- 모든 프레임 엔진에 Styling 주입 및 SetTemplate 후킹
-local function AddStylingAPI()
+-- 3. 모든 프레임 설계도(Metatable)에 IringUI 기능을 직접 주입 (핵심!)
+local function AddIringAPI()
 	local frame = CreateFrame("Frame")
 	local mt = getmetatable(frame).__index
 	
-	-- 1. 모든 프레임에서 :Styling() 호출 가능하게 함
 	if not mt.Styling then mt.Styling = Styling end
+	if not mt.StripFrame then mt.StripFrame = StripFrame end
 
-	-- 2. ElvUI의 가장 핵심 함수인 SetTemplate을 낚아챔 (블리자드 스킨용)
+	-- ElvUI 배경 생성 시 자동 호출
 	if mt.SetTemplate then
 		hooksecurefunc(mt, "SetTemplate", function(f)
 			if f and f.Styling then f:Styling() end
 		end)
 	end
-
-	-- 3. CreateBackdrop도 안전하게 한 번 더 후킹
-	if mt.CreateBackdrop then
-		hooksecurefunc(mt, "CreateBackdrop", function(f)
-			if f and f.Styling then f:Styling() end
-		end)
-	end
 end
 
--- API 주입 실행
-AddStylingAPI()
-
--- 기존 프레임 및 이미 스킨된 블리자드 프레임 소급 적용
-local function ApplyToExisting()
-	-- 주요 ElvUI 패널
-	local panels = {
-		_G["LeftChatPanel"], _G["RightChatPanel"], _G["MinimapPanel"], 
-		_G["ElvUI_Bar1"], _G["ElvUI_Bar2"], _G["ElvUI_Bar3"], 
-		_G["ElvUI_Bar4"], _G["ElvUI_Bar5"], _G["ElvUI_Bar6"]
-	}
-	for _, frame in pairs(panels) do
-		if frame and frame.Styling then frame:Styling() end
-	end
-    
-    -- 이미 열려있거나 생성된 블리자드 프레임들 처리
-    if _G["CharacterFrame"] and _G["CharacterFrame"].backdrop then _G["CharacterFrame"].backdrop:Styling() end
-    if _G["SpellBookFrame"] and _G["SpellBookFrame"].backdrop then _G["SpellBookFrame"].SpellBookFrame:Styling() end
-end
-
-local loader = CreateFrame("Frame")
-loader:RegisterEvent("PLAYER_ENTERING_WORLD")
-loader:SetScript("OnEvent", function(self)
-	ApplyToExisting()
-	self:UnregisterAllEvents()
-end)
+AddIringAPI()
