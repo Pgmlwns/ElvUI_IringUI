@@ -1,62 +1,71 @@
 local IR, F, E, L, V, P, G = unpack(select(2, ...))
 local PI = E:GetModule('PluginInstaller')
 
--- 설치 완료 및 재시작 함수
+-- 설치 완료 함수
 local function InstallComplete()
 	E.db.IringUI.install_complete = E.version
-	if _G.PluginInstallStepComplete then
-		_G.PluginInstallStepComplete.message = IR.Title .. " 설치 완료!"
-		_G.PluginInstallStepComplete:Show()
-	end
 	_G.ReloadUI()
 end
 
--- [핵심] 설치창 전용 빗살무늬 강제 생성 함수 (Styling.lua 독립형)
+-- [수정] 빗살무늬와 그림자(Shadow)를 동시에 강제 생성하는 함수
 local function ForceIringStyle()
 	local f = _G.PluginInstallFrame
 	if not f then return end
 
-	-- 1. 메인 본체 배경(backdrop)에 직접 텍스처 생성
 	local target = f.backdrop or f
-	if target and not target.IringStripes then
-		local tex = target:CreateTexture(nil, "OVERLAY", nil, 7) -- 최상단 레이어
-		tex:SetInside(target, 1, -1)
-		tex:SetTexture(IR.Media.Stripes, true, true)
-		tex:SetHorizTile(true)
-		tex:SetVertTile(true)
-		tex:SetBlendMode("ADD")
-		tex:SetAlpha(0.5) -- 빗살무늬 농도
-		target.IringStripes = tex
+	if target then
+		-- 1. 빗살무늬 (Stripes) 생성 및 유지
+		if not target.IringStripes then
+			local tex = target:CreateTexture(nil, "OVERLAY", nil, 6) -- 그림자보다 아래 레이어
+			tex:SetInside(target, 1, -1)
+			tex:SetTexture(IR.Media.Stripes, true, true)
+			tex:SetHorizTile(true)
+			tex:SetVertTile(true)
+			tex:SetBlendMode("ADD")
+			tex:SetAlpha(0.5)
+			target.IringStripes = tex
+		end
+
+		-- 2. [추가] 그림자 (Shadow) 생성 - 서브창과 느낌 맞추기
+		if not target.IringShadow then
+			local sha = target:CreateTexture(nil, "OVERLAY", nil, 7) -- 빗살무늬보다 위 레이어
+			sha:SetInside(target, 0, 0)
+			sha:SetTexture(IR.Media.Overlay) -- Styling.lua에서 사용하는 그림자 텍스처
+			
+			-- 직업 색상 적용 (Styling.lua 로직과 통일)
+			local color = RAID_CLASS_COLORS[E.myclass]
+			sha:SetVertexColor(color.r, color.g, color.b)
+			sha:SetAlpha(0.6) -- 서브창과 동일한 농도
+			
+			target.IringShadow = sha
+		end
 	end
 
-	-- 2. 제목 줄(Title) 배경 처리
+	-- 제목 줄(Title)에도 동일하게 그림자 적용
 	local title = _G.PluginInstallTitleFrame
-	if title and title.backdrop and not title.backdrop.IringStripes then
-		local tex = title.backdrop:CreateTexture(nil, "OVERLAY", nil, 7)
-		tex:SetInside(title.backdrop, 1, -1)
-		tex:SetTexture(IR.Media.Stripes, true, true)
-		tex:SetHorizTile(true)
-		tex:SetVertTile(true)
-		tex:SetBlendMode("ADD")
-		title.backdrop.IringStripes = tex
+	if title and title.backdrop then
+		if not title.backdrop.IringShadow then
+			local sha = title.backdrop:CreateTexture(nil, "OVERLAY", nil, 7)
+			sha:SetInside(title.backdrop, 0, 0)
+			sha:SetTexture(IR.Media.Overlay)
+			local color = RAID_CLASS_COLORS[E.myclass]
+			sha:SetVertexColor(color.r, color.g, color.b)
+			sha:SetAlpha(0.6)
+			title.backdrop.IringShadow = sha
+		end
 	end
 end
 
--- ElvUI 기본 설치창 가로채기
+-- [이하 InterceptInstaller, installTable, SetPage 후킹 로직은 기존과 동일]
 function IR:InterceptInstaller()
 	if _G.ElvUIInstallFrame then _G.ElvUIInstallFrame:Hide() end
-	E.Install = function() 
-		PI:Queue(self.installTable)
-		E:ToggleOptionsUI() 
-	end
-
+	E.Install = function() PI:Queue(self.installTable); E:ToggleOptionsUI() end
 	if not E.db.IringUI.install_complete then
 		E.private.install_complete = E.version
 		PI:Queue(self.installTable)
 	end
 end
 
--- 설치 가이드 테이블 (3페이지)
 IR.installTable = {
 	["Name"] = "|cffff69b4Iring|r|cffb2b2b2UI|r",
 	["Title"] = "|cffff69b4Iring|r|cffb2b2b2UI|r 설치 가이드",
@@ -69,7 +78,7 @@ IR.installTable = {
 			_G.PluginInstallFrame.Option1:Show()
 			_G.PluginInstallFrame.Option1:SetText("설치 건너뛰기")
 			_G.PluginInstallFrame.Option1:SetScript("OnClick", function() InstallComplete() end)
-			ForceIringStyle() -- 페이지 진입 시 강제 적용
+			ForceIringStyle()
 		end,
 		[2] = function()
 			if not _G.PluginInstallFrame then return end
@@ -102,7 +111,6 @@ IR.installTable = {
 	["StepTitlesColorSelected"] = RAID_CLASS_COLORS[E.myclass],
 }
 
--- 페이지 바뀔 때마다 0.01초 뒤에 스타일 재확인 (결정타)
 hooksecurefunc(PI, "SetPage", function()
 	E:Delay(0.01, ForceIringStyle)
 end)
