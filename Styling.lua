@@ -9,6 +9,13 @@ local function Styling(f, useStripes, useShadow)
 	if not E.db or not E.db.IringUI or not E.db.IringUI.skin or not E.db.IringUI.skin.enable then return end
 	if not f or f.IRstyle or f.__style then return end
 
+	-- [수정] 프레임 배경이 투명(Alpha 0)이면 스타일을 입히지 않고 종료
+	-- 이 로직이 투명한 애드온 배경에 잔상이 생기는 것을 방지합니다.
+	if f.GetBackdropColor then
+		local _, _, _, a = f:GetBackdropColor()
+		if a and a == 0 then return end
+	end
+
 	-- [자동 필터 로직] 등록된 모듈 키워드가 프레임 이름에 포함되어 있는지 확인
 	local name = f.GetName and f:GetName() or ""
 	for keyword, checkFunc in pairs(IR.ModuleFilters) do
