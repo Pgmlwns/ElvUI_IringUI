@@ -75,7 +75,7 @@ function module:SetupGameMenu()
     
     model:SetUnit("player")
     model:SetFacing(0.4) -- 메뉴를 살짝 바라보는 각도
-    model:SetCamDistanceScale(0.8) -- 캐릭터 크기 비율
+    model:SetCamDistanceScale(1.4) -- 캐릭터 크기 비율
     model:SetPortraitZoom(0) -- 전신 샷
     
     -- 매번 ESC를 누를 때마다 모델 정보 갱신
