@@ -45,7 +45,7 @@ local function Styling(f, useStripes, useShadow)
 		mshadow:SetTexture(IR.Media.Overlay)
 		local color = RAID_CLASS_COLORS[E.myclass]
 		mshadow:SetVertexColor(color.r, color.g, color.b)
-		mshadow:SetAlpha(0.3)
+		mshadow:SetAlpha(0.6)
 		style.mshadow = mshadow
 	end
 
