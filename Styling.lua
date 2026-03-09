@@ -9,11 +9,10 @@ local function Styling(f, useStripes, useShadow)
 	if not E.db or not E.db.IringUI or not E.db.IringUI.skin or not E.db.IringUI.skin.enable then return end
 	if not f or f.IRstyle or f.__style then return end
 
-	-- [자동 필터 로직] 등록된 모듈 키워드가 프레임 이름에 포함되어 있는지 확인
+	-- [자동 필터 로직]
 	local name = f.GetName and f:GetName() or ""
 	for keyword, checkFunc in pairs(IR.ModuleFilters) do
 		if name:find(keyword) then
-			-- 해당 모듈의 설정이 꺼져있으면(false) 스타일을 입히지 않고 종료
 			if not checkFunc() then return end
 		end
 	end
@@ -31,7 +30,6 @@ local function Styling(f, useStripes, useShadow)
 		stripes:SetHorizTile(true) stripes:SetVertTile(true)
 		stripes:SetBlendMode("ADD")
 		
-		-- 설치창 레이어 처리
 		if frameName and (frameName:find("PluginInstall") or frameName:find("ElvUIInstall")) then
 			stripes:SetDrawLayer("OVERLAY", 7)
 		end
@@ -52,29 +50,40 @@ local function Styling(f, useStripes, useShadow)
 	style:SetFrameStrata(f:GetFrameStrata())
 	style:SetFrameLevel(math.max(0, f:GetFrameLevel() - 1))
 	style:SetAllPoints(f)
-
-	-- [핵심 수정: 배경 상태에 따른 강제 동기화]
-	-- ElvUI 프레임이 투명해지거나 배경이 사라질 때 스타일 프레임도 즉시 반응하도록 합니다.
-	local function SyncStyleVisibility()
+	
+	-- [핵심 수정: 강제 투명도 동기화]
+	-- 부모 프레임의 실제 배경 투명도를 실시간으로 감시하여 스타일을 숨깁니다.
+	local function UpdateVisibility()
 		if not f or not style then return end
-		-- 배경 알파값이 0이거나, 배경 텍스처가 숨겨져 있다면 스타일도 숨김
-		local _, _, _, a = f:GetBackdropColor()
-		if (a and a == 0) or (f.template == "NoBackdrop") then
+		local r, g, b, a = 0, 0, 0, 1
+		if f.GetBackdropColor then
+			r, g, b, a = f:GetBackdropColor()
+		end
+		
+		-- 배경 알파가 0이거나, 엘브에서 배경을 제거한 경우 스타일 숨김
+		if (a and a <= 0.01) or (f.template == "NoBackdrop") then
 			style:SetAlpha(0)
 		else
 			style:SetAlpha(1)
 		end
 	end
 
-	-- 배경 색상 변경 시 체크
+	-- 이벤트 핸들러 등록
 	if f.SetBackdropColor then
-		hooksecurefunc(f, "SetBackdropColor", SyncStyleVisibility)
+		hooksecurefunc(f, "SetBackdropColor", UpdateVisibility)
 	end
-
-	-- 프레임이 다시 그려지거나 표시될 때 체크
-	f:HookScript("OnShow", SyncStyleVisibility)
-	SyncStyleVisibility() -- 초기 실행
 	
+	-- 프레임이 그려질 때마다 투명도 상태를 강제로 다시 체크 (가장 확실한 방법)
+	f:HookScript("OnShow", UpdateVisibility)
+	style:SetScript("OnUpdate", function(self, elapsed)
+		self.timer = (self.timer or 0) + elapsed
+		if self.timer > 0.2 then -- 0.2초마다 배경 상태 감시
+			UpdateVisibility()
+			self.timer = 0
+		end
+	end)
+	
+	UpdateVisibility()
 	f.IRstyle = style
 	f.__style = 1
 end
@@ -117,17 +126,13 @@ local function AddIringAPI()
 
 	local function OnSetTemplate(f)
 		if not f then return end
-		
-		-- 스타일 적용
 		Styling(f)
 		
-		-- 하이라이트 제외 대상 필터링
 		local name = f.GetName and f:GetName() or ""
 		if name:find("ChatTab") or name:find("ChatFrame") or name:find("Install") then 
 			return 
 		end
 		
-		-- 버튼이거나 탭이면 테두리 하이라이트 적용
 		if f:IsObjectType("Button") or name:find("Tab") then
 			StyleButton(f)
 		end
@@ -136,7 +141,6 @@ local function AddIringAPI()
 	if mt.SetTemplate then hooksecurefunc(mt, "SetTemplate", OnSetTemplate) end
 	if bt.SetTemplate then hooksecurefunc(bt, "SetTemplate", OnSetTemplate) end
 
-	-- 판다리아 클래식 탭 스킨 후킹
 	local S = E:GetModule('Skins')
 	if S and S.HandleTab then
 		hooksecurefunc(S, "HandleTab", function(_, tab)
