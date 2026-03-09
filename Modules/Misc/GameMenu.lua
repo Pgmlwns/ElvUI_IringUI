@@ -68,10 +68,10 @@ function module:SetupGameMenu()
     local model = CreateFrame("PlayerModel", "IR_GameMenuModel", GameMenuFrame)
     model:SetFrameStrata("TOOLTIP")
     model:SetFrameLevel(9) -- 메뉴 버튼보다 살짝 아래 레이어
-    model:SetSize(E.screenWidth / 2, E.screenHeight * 0.7) -- 전신이 잘 나오도록 크게 설정
+    model:SetSize(E.screenWidth / 2, E.screenHeight * 1.0) -- 전신이 잘 나오도록 크게 설정
     
     -- 위치 수정: 왼쪽 끝에서 450픽셀 지점으로 이동 (중앙 메뉴에 가깝게)
-    model:SetPoint("LEFT", E.UIParent, "LEFT", 150, 0) 
+    model:SetPoint("LEFT", E.UIParent, "LEFT", 120, 0) 
     
     model:SetUnit("player")
     model:SetFacing(0.4) -- 메뉴를 살짝 바라보는 각도
