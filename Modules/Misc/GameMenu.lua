@@ -24,8 +24,12 @@ function module:SetupGameMenu()
     tp:SetTemplate("Transparent")
     if IR.Styling then 
         IR.Styling(tp) 
+        -- [강화] 배경이 커서 안 보이는 문제를 해결하기 위해 투명도를 높이고 블렌드 모드 추가
         if tp.IRstripes then tp.IRstripes:SetAlpha(1) end
-        if tp.IRshadow then tp.IRshadow:SetAlpha(0.4) end
+        if tp.IRshadow then 
+            tp.IRshadow:SetAlpha(0.7) -- 기존 0.4에서 0.7로 대폭 강화
+            tp.IRshadow:SetBlendMode("ADD") -- 색상을 더 밝게 띄움
+        end
     end
     
     -- 상단 패널 하단 직업 색상 선
@@ -52,8 +56,12 @@ function module:SetupGameMenu()
     bp:SetTemplate("Transparent")
     if IR.Styling then 
         IR.Styling(bp) 
+        -- [강화] 하단 패널도 동일하게 적용
         if bp.IRstripes then bp.IRstripes:SetAlpha(1) end
-        if bp.IRshadow then bp.IRshadow:SetAlpha(0.4) end
+        if bp.IRshadow then 
+            bp.IRshadow:SetAlpha(0.7) 
+            bp.IRshadow:SetBlendMode("ADD")
+        end
     end
 
     -- 하단 패널 상단 직업 색상 선
@@ -71,21 +79,16 @@ function module:SetupGameMenu()
     logo:SetTexture("Interface\\Glues\\MainScreen\\Glues-WoW-Logo") 
     bp.logo = logo
 
-    -- [왼쪽 캐릭터 모델] 크기 및 위치 수정
+    -- [왼쪽 캐릭터 모델] 위치 및 시점 조정
     local model = CreateFrame("PlayerModel", "IR_GameMenuModel", GameMenuFrame)
     model:SetFrameStrata("TOOLTIP")
-    model:SetFrameLevel(11)
-    
-    -- 모델 크기 축소 (기존 해상도 절반 수준에서 적정 크기로 조정)
+    model:SetFrameLevel(9)
     model:SetSize(E.screenWidth / 3, E.screenHeight) 
-    
-    -- [위치 수정] 왼쪽 끝에서 120픽셀 지점으로 이동
-    model:SetPoint("LEFT", E.UIParent, "LEFT", 120, 0) 
-    
+    model:SetPoint("LEFT", E.UIParent, "LEFT", 120, -20) 
     model:SetUnit("player")
-    model:SetFacing(0.5) -- 모델 회전 각도
-    model:SetCamDistanceScale(1.3) -- 숫자를 키울수록 캐릭터가 작게 보입니다 (멀어짐)
-    model:SetPortraitZoom(0) -- 전신 모드
+    model:SetFacing(0.5)
+    model:SetCamDistanceScale(1.4) -- 조금 더 멀리서 찍어 크기 조절
+    model:SetPortraitZoom(0) 
     
     model:SetScript("OnShow", function(self) 
         self:SetUnit("player") 
