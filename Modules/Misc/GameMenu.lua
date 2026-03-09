@@ -80,7 +80,7 @@ function module:SetupGameMenu()
     model:SetSize(E.screenWidth / 3, E.screenHeight) 
     
     -- [위치 수정] 왼쪽 끝에서 120픽셀 지점으로 이동
-    model:SetPoint("LEFT", E.UIParent, "LEFT", 120, -20) 
+    model:SetPoint("LEFT", E.UIParent, "LEFT", 120, 0) 
     
     model:SetUnit("player")
     model:SetFacing(0.5) -- 모델 회전 각도
