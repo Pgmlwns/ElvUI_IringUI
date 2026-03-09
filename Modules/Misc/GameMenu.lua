@@ -74,7 +74,7 @@ function module:SetupGameMenu()
     -- [왼쪽 캐릭터 모델] 크기 및 위치 수정
     local model = CreateFrame("PlayerModel", "IR_GameMenuModel", GameMenuFrame)
     model:SetFrameStrata("TOOLTIP")
-    model:SetFrameLevel(9)
+    model:SetFrameLevel(11)
     
     -- 모델 크기 축소 (기존 해상도 절반 수준에서 적정 크기로 조정)
     model:SetSize(E.screenWidth / 3, E.screenHeight) 
