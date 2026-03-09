@@ -13,6 +13,9 @@ function module:SetupGameMenu()
     local GameMenuFrame = _G["GameMenuFrame"]
     if not GameMenuFrame or GameMenuFrame.IRtopPanel then return end
 
+    -- 직업 색상 가져오기
+    local color = RAID_CLASS_COLORS[E.myclass]
+
     -- 상단 패널
     local tp = CreateFrame("Frame", "IR_TopPanel", GameMenuFrame, "BackdropTemplate")
     tp:SetFrameStrata("TOOLTIP") tp:SetFrameLevel(10)
@@ -20,6 +23,15 @@ function module:SetupGameMenu()
     tp:SetPoint("TOP", E.UIParent, "TOP", 0, 1)
     tp:SetTemplate("Transparent")
     if IR.ApplyStyle then IR:ApplyStyle(tp) end
+    
+    -- [추가] 상단 패널 하단 직업 색상 선
+    local tpLine = tp:CreateTexture(nil, "OVERLAY")
+    tpLine:SetHeight(2) -- 선 두께
+    tpLine:SetPoint("BOTTOMLEFT", tp, "BOTTOMLEFT", 0, 0)
+    tpLine:SetPoint("BOTTOMRIGHT", tp, "BOTTOMRIGHT", 0, 0)
+    tpLine:SetTexture(E.media.blankTex)
+    tpLine:SetVertexColor(color.r, color.g, color.b)
+    
     GameMenuFrame.IRtopPanel = tp
 
     -- 하단 패널
@@ -29,6 +41,15 @@ function module:SetupGameMenu()
     bp:SetPoint("BOTTOM", E.UIParent, "BOTTOM", 0, -1)
     bp:SetTemplate("Transparent")
     if IR.ApplyStyle then IR:ApplyStyle(bp) end
+
+    -- [추가] 하단 패널 상단 직업 색상 선
+    local bpLine = bp:CreateTexture(nil, "OVERLAY")
+    bpLine:SetHeight(2) -- 선 두께
+    bpLine:SetPoint("TOPLEFT", bp, "TOPLEFT", 0, 0)
+    bpLine:SetPoint("TOPRIGHT", bp, "TOPRIGHT", 0, 0)
+    bpLine:SetTexture(E.media.blankTex)
+    bpLine:SetVertexColor(color.r, color.g, color.b)
+    
     GameMenuFrame.IRbottomPanel = bp
 end
 
