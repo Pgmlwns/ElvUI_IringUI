@@ -21,11 +21,9 @@ function module:SetupGameMenu()
     tp:SetSize(E.screenWidth + 20, E.screenHeight / 4)
     tp:SetPoint("TOP", E.UIParent, "TOP", 0, 1)
     
-    -- 스타일링 적용 (Transparent 템플릿 사용 시 잔상 방지 로직을 우회하기 위해 순서 조정)
     tp:SetTemplate("Transparent")
     if IR.Styling then 
         IR.Styling(tp) 
-        -- 강제로 스타일이 보이도록 처리 (알파값 0 체크 우회)
         if tp.IRstripes then tp.IRstripes:SetAlpha(1) end
         if tp.IRshadow then tp.IRshadow:SetAlpha(0.4) end
     end
@@ -54,7 +52,6 @@ function module:SetupGameMenu()
     bp:SetTemplate("Transparent")
     if IR.Styling then 
         IR.Styling(bp) 
-        -- 강제로 스타일이 보이도록 처리
         if bp.IRstripes then bp.IRstripes:SetAlpha(1) end
         if bp.IRshadow then bp.IRshadow:SetAlpha(0.4) end
     end
@@ -74,21 +71,26 @@ function module:SetupGameMenu()
     logo:SetTexture("Interface\\Glues\\MainScreen\\Glues-WoW-Logo") 
     bp.logo = logo
 
-    -- [왼쪽 캐릭터 모델]
+    -- [왼쪽 캐릭터 모델] 크기 및 위치 수정
     local model = CreateFrame("PlayerModel", "IR_GameMenuModel", GameMenuFrame)
     model:SetFrameStrata("TOOLTIP")
     model:SetFrameLevel(9)
-    model:SetSize(E.screenWidth / 2, E.screenHeight * 1.2)
-    model:SetPoint("LEFT", E.UIParent, "LEFT", 450, -50) 
+    
+    -- 모델 크기 축소 (기존 해상도 절반 수준에서 적정 크기로 조정)
+    model:SetSize(E.screenWidth / 3, E.screenHeight) 
+    
+    -- [위치 수정] 왼쪽 끝에서 120픽셀 지점으로 이동
+    model:SetPoint("LEFT", E.UIParent, "LEFT", 120, -20) 
+    
     model:SetUnit("player")
-    model:SetFacing(0.4)
-    model:SetCamDistanceScale(1.1)
-    model:SetPortraitZoom(0)
+    model:SetFacing(0.5) -- 모델 회전 각도
+    model:SetCamDistanceScale(1.3) -- 숫자를 키울수록 캐릭터가 작게 보입니다 (멀어짐)
+    model:SetPortraitZoom(0) -- 전신 모드
     
     model:SetScript("OnShow", function(self) 
         self:SetUnit("player") 
         self:SetAnimation(0) 
-        self:SetRotation(0.4)
+        self:SetRotation(0.5)
     end)
     
     GameMenuFrame.IRplayerModel = model
