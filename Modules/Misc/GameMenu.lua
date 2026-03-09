@@ -67,8 +67,8 @@ function module:SetupGameMenu()
     local model = CreateFrame("PlayerModel", "IR_GameMenuModel", GameMenuFrame)
     model:SetFrameStrata("TOOLTIP")
     model:SetFrameLevel(11) -- 패널보다 위
-    model:SetSize(E.screenWidth / 3, E.screenHeight * 0.8)
-    model:SetPoint("LEFT", E.UIParent, "LEFT", 50, 0)
+    model:SetSize(E.screenWidth / 3, E.screenHeight * 0.6)
+    model:SetPoint("LEFT", E.UIParent, "LEFT", 100, 0)
     model:SetUnit("player")
     model:SetFacing(0.5) -- 약간 비스듬하게
     model:SetAnimation(0) -- 기본 대기 동작
