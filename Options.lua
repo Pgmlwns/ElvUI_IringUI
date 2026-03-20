@@ -42,7 +42,15 @@ function IR:OptionsCallback()
     -- [유틸리티] 버튼들
     misc.util = ACH:Group("유틸리티", nil, 10, "inline")
     misc.util.args.install = ACH:Execute("설치 가이드 열기", "IringUI 설치 창을 다시 엽니다.", 1, function() if IR.InterceptInstaller then IR:InterceptInstaller() end; E:ToggleOptionsUI() end)
-    misc.util.args.media = ACH:Execute("미디어 업데이트", "IringUI 전용 미디어 설정을 강제로 다시 적용합니다.", 2, function() if IR.ForceMediaUpdate then IR:ForceMediaUpdate() end; UpdateRL() end)
+misc.util.args.install = ACH:Execute("설치 가이드 열기", "IringUI 설치 창을 다시 엽니다.", 1, function() 
+    if IR.InterceptInstaller then 
+        IR:InterceptInstaller() 
+    end
+    -- 설정창 닫기 함수 수정
+    if E.ToggleOptions then
+        E:ToggleOptions()
+    end
+end)
     
     -- [수정됨] Layout 모듈을 정상적으로 불러와서 업데이트 실행
     misc.util.args.layout = ACH:Execute("레이아웃 업데이트", "IringUI 전용 레이아웃을 다시 적용합니다.", 3, function() 
