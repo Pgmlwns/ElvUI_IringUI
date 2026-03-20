@@ -57,7 +57,26 @@
         "NO",
         "TRIVIAL_QUEST_DISPLAY",
         "TooltipDataProcessor",
-        "GameMenuFrame"
+        "GameMenuFrame",
+        "DEFAULT_CHAT_FRAME",
+        "PlayerSpellsFrame_LoadUI",
+        "MAX_ACCOUNT_MACROS",
+        "MAX_CHARACTER_MACROS",
+        "NUM_PET_ACTION_SLOTS",
+        "LEVEL",
+        "CLASS",
+        "PLAYER",
+        "MAX_TALENT_TIERS",
+        "NUM_TALENT_COLUMNS",
+        "PlayerSpellsFrame",
+        "TALENTS",
+        "SPECIALIZATION",
+        "NONE_CAPS",
+        "GameTooltip_Hide",
+        "SecureActionButton_OnClick",
+        "CHARACTER_SPECIFIC_KEYBINDING_TOOLTIP",
+        "CHARACTER_SPECIFIC_KEYBINDINGS",
+        "QUICK_KEYBIND_MODE"
     ],
     "Lua.type.weakUnionCheck": true
 }

@@ -7,12 +7,12 @@
 ## SavedVariables: IringUIDB
 ## SavedVariablesPerCharacter: IringUIDBPC
 
+Profile.lua
 init.lua
-Config\Core.lua
+Modules\Layout.lua
 Modules\Misc\GameMenu.lua
 Options.lua
 Styling.lua
 Media.lua
-Layout.lua
 Install.lua
 
