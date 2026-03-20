@@ -46,7 +46,7 @@ function IR:InterceptInstaller()
 	-- ElvUI 기본 설치창 대신 Iring 설치창을 대기열에 추가
 	E.Install = function() 
 		PI:Queue(IR.installTable)
-		E:ToggleOptionsUI() 
+		E:ToggleOptions() 
 	end
 
 	-- 설치 기록이 없으면 자동으로 띄움
